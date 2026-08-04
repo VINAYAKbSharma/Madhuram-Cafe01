@@ -1,0 +1,171 @@
+.profile-page {
+  min-height: 100vh;
+  background: #0b0b0b;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 100px 20px 60px;
+}
+
+.profile-card {
+  width: 100%;
+  max-width: 500px;
+  background: #171717;
+  border-radius: 20px;
+  padding: 35px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Top bar ── */
+.profile-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.back-home-btn,
+.logout-btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.25s;
+}
+
+.back-home-btn {
+  background: #242424;
+  color: #d4a762;
+}
+
+.back-home-btn:hover {
+  background: #333;
+}
+
+.logout-btn {
+  background: #d4a762;
+  color: #111;
+}
+
+.logout-btn:hover {
+  background: #c8923f;
+}
+
+/* ── Avatar ── */
+.profile-image {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: #242424;
+  color: #d4a762;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 90px;
+  border: 4px solid #d4a762;
+}
+
+/* ── Name / heading ── */
+.profile-card h2 {
+  margin-top: 20px;
+  color: #fff;
+  font-size: 28px;
+}
+
+.profile-name {
+  color: #d4a762;
+  margin-top: 8px;
+  margin-bottom: 24px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* ── Account details ── */
+.user-details {
+  background: #1e1e1e;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: #999;
+  font-size: 14px;
+}
+
+.detail-value {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ── Info cards ── */
+.message-box {
+  background: #1e1e1e;
+  border-left: 5px solid #d4a762;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.message-box:last-child {
+  margin-bottom: 0;
+}
+
+.message-box h3 {
+  color: #d4a762;
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+
+.message-box p {
+  color: #bbb;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .profile-card {
+    padding: 25px 20px;
+  }
+
+  .profile-image {
+    width: 100px;
+    height: 100px;
+    font-size: 75px;
+  }
+
+  .profile-card h2 {
+    font-size: 24px;
+  }
+
+  .profile-top-bar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .back-home-btn,
+  .logout-btn {
+    width: 100%;
+    text-align: center;
+  }
+}

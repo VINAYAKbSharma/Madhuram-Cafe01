@@ -1,0 +1,127 @@
+.allfood {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 16px;
+}
+
+.allfood.full-screen {
+  position: fixed;
+  inset: 0;
+  background: #0d0d0d;
+  overflow: auto;
+  padding: 20px;
+  z-index: 60;
+}
+
+.allfood-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.close-allfood {
+  background: #D4A762;
+  color: #111;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 50px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.allfood.full-screen .back-floating {
+  position: fixed;
+  left: 18px;
+  bottom: 20px;
+  z-index: 120;
+  background: #0f0d0d;
+  border: 1px solid #ddd;
+  padding: 10px 14px;
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.allfood.full-screen .back-floating svg { width: 14px; height: 14px; }
+
+.category-container {
+  background: #1a1a1a;
+  border-radius: 25px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(212,167,98,0.12);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.category-title {
+  margin: 0 0 18px 0;
+  font-size: 22px;
+  color: #fff;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.food-card {
+  background: #111;
+  border: 1px solid rgba(212,167,98,0.08);
+  border-radius: 20px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 150px;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.food-card:hover {
+  transform: translateY(-6px);
+  background: #181818;
+}
+
+.food-name {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  color: #fff;
+}
+
+.food-price {
+  margin: 0 0 6px 0;
+  color: #D4A762;
+  font-weight: 700;
+}
+
+.food-prep, .food-available {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #d1d5db;
+}
+
+.food-available.no { color: #f87171; }
+.food-available.yes { color: #34d399; }
+
+.card-actions { display: flex; justify-content: flex-end; }
+
+.add-cart {
+  background: #ff6b00;
+  color: #fff;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.add-cart:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}

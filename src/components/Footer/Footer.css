@@ -1,0 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 95px;
+  background: rgba(18, 18, 18, 0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(212, 167, 98, 0.25);
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 18px;
+  z-index: 9999;
+  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.25);
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+.footer--hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(25px);
+  pointer-events: none;
+}
+
+.footer-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #d8d8d8;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.3s;
+  border: none;
+  background: transparent;
+  flex: 1;
+  min-width: 70px;
+}
+
+.footer-item svg {
+  font-size: 22px;
+}
+
+.footer-item:hover,
+.footer-item.active {
+  color: #D4A762;
+}
+
+.footer-logo {
+  width: 90px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: -55px;
+}
+
+.logo-circle {
+  width: 90px;
+  height: 90px;
+  background: #111;
+  border: 5px solid #D4A762;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 10px 35px rgba(212, 167, 98, 0.35);
+}
+
+.logo-circle svg {
+  font-size: 42px;
+  color: #D4A762;
+}
+
+@media (max-width: 1200px) {
+  .footer {
+    height: 90px;
+    padding: 0 14px;
+  }
+  .footer-item {
+    min-width: 60px;
+  }
+  .footer-item svg {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 900px) {
+  .footer {
+    width: 98%;
+    height: 88px;
+    padding: 0 12px;
+  }
+  .footer-item {
+    font-size: 12px;
+    min-width: 55px;
+  }
+  .logo-circle {
+    width: 78px;
+    height: 78px;
+  }
+  .logo-circle svg {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 600px) {
+  .footer {
+    width: 100%;
+    left: 0;
+    transform: none;
+    bottom: 0;
+    height: 80px;
+    border-radius: 0;
+  }
+  .footer-item {
+    min-width: 50px;
+    font-size: 11px;
+  }
+  .footer-item svg {
+    font-size: 18px;
+  }
+  .footer-logo {
+    width: 72px;
+    margin-top: -45px;
+  }
+  .logo-circle {
+    width: 72px;
+    height: 72px;
+  }
+  .logo-circle svg {
+    font-size: 32px;
+  }
+}

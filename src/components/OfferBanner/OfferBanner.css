@@ -1,0 +1,209 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+.offer-banner{
+    position:relative;
+    padding:clamp(60px, 10vw, 120px) clamp(16px, 6vw, 64px);
+    background:url("../../assets/banner/offer-banner-new.jpg") center/cover no-repeat;
+    background-size:cover;
+    background-position:center;
+    border-radius:30px;
+    margin:clamp(40px, 6vw, 80px) clamp(16px, 6vw, 64px);
+    overflow:hidden;
+}
+
+.offer-overlay{
+
+    position:absolute;
+
+    inset:0;
+
+    background:rgba(0,0,0,.70);
+
+}
+
+.offer-content{
+
+    position:relative;
+
+    z-index:2;
+
+    max-width:700px;
+
+    color:#fff;
+
+}
+
+.offer-tag{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:12px 22px;
+
+    background:#D4A762;
+
+    color:#111;
+
+    border-radius:50px;
+
+    font-weight:600;
+
+}
+
+.offer h2{
+
+    font-size:60px;
+
+    margin:25px 0 15px;
+
+}
+
+.offer h2 span{
+
+    color:#D4A762;
+
+}
+
+.offer h3{
+
+    font-size:28px;
+
+    margin-bottom:25px;
+
+    color:#ddd;
+
+}
+
+.coupon{
+
+    display:inline-block;
+
+    background:#fff;
+
+    color:#111;
+
+    padding:18px 30px;
+
+    border-radius:12px;
+
+    font-size:18px;
+
+    margin-bottom:35px;
+
+}
+
+.coupon strong{
+
+    margin-left:10px;
+
+    color:#D4A762;
+
+}
+
+.offer-features{
+
+    display:flex;
+
+    gap:25px;
+
+    flex-wrap:wrap;
+
+    margin-bottom:35px;
+
+}
+
+.offer-features div{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+.offer-buttons{
+
+    display:flex;
+
+    gap:20px;
+
+    flex-wrap:wrap;
+
+}
+
+.offer-buttons button{
+
+    padding:15px 35px;
+
+    border:none;
+
+    border-radius:50px;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+    transition:.3s;
+
+}
+
+.offer-buttons button:first-child{
+
+    background:#D4A762;
+
+}
+
+.offer-buttons button:hover{
+
+    transform:translateY(-5px);
+
+}
+
+.outline{
+
+    background:transparent;
+
+    color:#fff;
+
+    border:2px solid #fff !important;
+
+}
+
+@media(max-width:768px){
+
+.offer{
+
+padding:80px 25px;
+
+margin:60px 20px;
+
+}
+
+.offer h2{
+
+font-size:38px;
+
+}
+
+.offer h3{
+
+font-size:22px;
+
+}
+
+.offer-buttons{
+
+flex-direction:column;
+
+}
+
+.offer-buttons button{
+
+width:100%;
+
+}
+
+}
