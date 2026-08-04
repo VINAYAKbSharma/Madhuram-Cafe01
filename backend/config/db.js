@@ -1,18 +1,19 @@
-import mysql from 'mysql2/promise';
-import dotenv from 'dotenv';
+import mysql from "mysql2/promise";
+import dotenv from "dotenv";
 
 dotenv.config();
 
-const DB_HOST = process.env.MYSQL_HOST || '127.0.0.1';
+const DB_HOST = process.env.MYSQL_HOST || "127.0.0.1";
 const DB_PORT = process.env.MYSQL_PORT ? Number(process.env.MYSQL_PORT) : 3306;
-const DB_USER = process.env.MYSQL_USER || 'root';
-const DB_PASSWORD = process.env.MYSQL_PASSWORD || 'root123';
-const DB_NAME = process.env.MYSQL_DATABASE || 'madhuram';
+const DB_USER = process.env.MYSQL_USER || "root";
+const DB_PASSWORD = process.env.MYSQL_PASSWORD || "root123";
+const DB_NAME = process.env.MYSQL_DATABASE || "madhuram";
 
 let pool;
 
 export async function getDb() {
-  if (!pool) throw new Error('MySQL pool not initialized. Call connectDB() first.');
+  if (!pool)
+    throw new Error("MySQL pool not initialized. Call connectDB() first.");
   return pool;
 }
 
@@ -46,10 +47,10 @@ export async function connectDB() {
     `);
 
     connection.release();
-    console.log('MySQL connected');
+    console.log("MySQL connected");
     return true;
   } catch (err) {
-    console.error('MySQL connection error:', err.message || err);
+    console.error("MySQL connection error:", err.message || err);
     return false;
   }
 }

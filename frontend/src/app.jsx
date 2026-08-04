@@ -133,6 +133,7 @@ function App() {
   const handleCheckout = () => {
     setIsCartOpen(false);
     setShowProfile(false);
+    setShowBookTable(false);
     setShowCheckout(true);
     setShowFooter(false);
   };

@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
-import { connectDB } from "./server/db.js";
+import { connectDB } from "./config/db.js";
 import authRouter from "./routes/auth.js";
 import cors from "cors";
 
@@ -18,9 +18,9 @@ app.use(cors());
 app.use(express.json());
 
 // API routes
-app.use('/api/auth', authRouter);
+app.use("/api/auth", authRouter);
 
-const distPath = path.join(__dirname, "../dist");
+const distPath = path.join(__dirname, "../../frontend/dist");
 app.use(express.static(distPath));
 
 app.get("*", (req, res) => {
@@ -29,5 +29,8 @@ app.get("*", (req, res) => {
 
 app.listen(port, () => {
   console.log(`Madhuram Cafe running at http://localhost:${port}`);
-  if (!dbConnected) console.warn('Warning: MySQL not connected — auth endpoints will fail until DB is available.');
+  if (!dbConnected)
+    console.warn(
+      "Warning: MySQL not connected — auth endpoints will fail until DB is available."
+    );
 });
