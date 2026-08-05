@@ -56,7 +56,7 @@ function Hero() {
 
         <FaMapMarkerAlt />
 
-        <span>Deliver to Bhopal, Madhya Pradesh</span>
+        <span>Deliver to Panna, Madhya Pradesh</span>
 
     </div>
 
