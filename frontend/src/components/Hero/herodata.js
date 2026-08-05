@@ -1,4 +1,4 @@
-const heroData = [
+const HeroData = [
     {
         id: 1,
         image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1400&q=80",
@@ -25,4 +25,4 @@ const heroData = [
     }
 ];
 
-export default heroData;
+export default Hero;
