@@ -1,19 +1,25 @@
 import mongoose from "mongoose";
+import dns from "dns";
 import dotenv from "dotenv";
 
 dotenv.config();
+
+// Fix DNS resolution for MongoDB Atlas on ISPs that block SRV records
+// (common with Reliance, Jio, Airtel in India)
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 const MONGO_URI =
   process.env.MONGO_URI || "mongodb://127.0.0.1:27017/madhuramCafe";
 
 export async function connectDB() {
   try {
-    const isLocal = MONGO_URI.includes("127.0.0.1") || MONGO_URI.includes("localhost");
+    const isLocal =
+      MONGO_URI.includes("127.0.0.1") || MONGO_URI.includes("localhost");
     console.log(`Connecting to MongoDB (${isLocal ? "local" : "remote"})...`);
 
     await mongoose.connect(MONGO_URI, {
-      serverSelectionTimeoutMS: 10000,
-      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 15000,
     });
 
     console.log("MongoDB connected successfully");
