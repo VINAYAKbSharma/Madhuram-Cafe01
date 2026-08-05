@@ -14,13 +14,13 @@ const categoryData = [
     id: 1,
     name: "Coffee",
     image: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=80",
-    items: "5 Items"
+    items: "3 Items"
   },
   {
     id: 2,
     name: "Burger",
     image: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=800&q=80",
-    items: "2 Items"
+    items: "5 Items"
   },
    {
     id: 3,
@@ -38,37 +38,37 @@ const categoryData = [
     id: 5,
     name: "Wraps",
     image: wraps,
-    items: "5 Items"
+    items: "3 Items"
   },
   {
     id: 6,
     name: "Tandoori Grills",
     image: tandoori,
-    items: "10 Items"
+    items: "9 Items"
   },
   {
     id: 7,
     name: "Desserts",
     image: dessert,
-    items: "5 Items"
+    items: "1 Items"
   },
   {
     id: 8,
     name: "Drinks",
     image: drinks,
-    items: "22 Items"
+    items: "17 Items"
   },
   {
     id: 9,
     name: "Snacks",
     image: snacks,
-    items: "22 Items"
+    items: "12 Items"
   },
   {
     id: 10,
     name: "Chinese",
     image: chinese,
-    items: "22 Items"
+    items: "11 Items"
   }
 ];
 

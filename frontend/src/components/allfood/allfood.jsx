@@ -3,31 +3,53 @@ import { FaArrowLeft } from "react-icons/fa";
 import "./allfood.css";
 
 const burgers = [
-  { id: 1, name: "Cheese Burger", price: 199, preparationTime: "10 mins", available: true },
-  { id: 2, name: "Paneer Burger", price: 179, preparationTime: "12 mins", available: true },
-  { id: 3, name: "Classic Burger", price: 149, preparationTime: "8 mins", available: true },
+  { id: 1, name: "Aloo Cheese Burger", price: 40, preparationTime: "10 mins", available: true },
+  { id: 2, name: "Veg Cheese Burger", price: 50, preparationTime: "12 mins", available: true },
+  { id: 3, name: "Paneer Burger", price: 60, preparationTime: "8 mins", available: true },
+  { id: 4, name: "Mexican Cheese Burger", price: 60, preparationTime: "8 mins", available: true },
+  { id: 5, name: "Madhuram Special Burger", price: 60, preparationTime: "8 mins", available: true },
 ];
 
 const chaap = [
   { id: 1, name: "Tandoori Chaap", price: 120, preparationTime: "20 mins", available: true },
   { id: 2, name: "Achari Chaap", price: 130, preparationTime: "20 mins", available: true },
   { id: 3, name: "Afgani Chaap", price: 130, preparationTime: "22 mins", available: true },
+   { id: 4, name: "Paneer Tikka", price: 130, preparationTime: "22 mins", available: true },
+    { id: 5, name: "Malai Chaap", price: 140, preparationTime: "22 mins", available: true },
+    { id: 6, name: "Mushroom Chaap", price: 140, preparationTime: "20 mins", available: true },
+  { id: 7, name: "Paneer Malai Tikka", price: 150, preparationTime: "20 mins", available: true },
+  { id: 8, name: "Madhuram Special Chaap", price: 160, preparationTime: "22 mins", available: true },
+   { id: 9, name: "Madhuram Special Tikka", price: 160, preparationTime: "22 mins", available: true },
+    
 ];
 
 const biryani = [
-  { id: 1, name: "Veg Biryani", price: 140, preparationTime: "20 mins", available: true },
-  { id: 2, name: "Paneer Biryani", price: 170, preparationTime: "22 mins", available: true },
-  { id: 3, name: "Mushroom Biryani", price: 170, preparationTime: "20 mins", available: true },
+  { id: 1, name: "Veg Biryani", price: 120, preparationTime: "20 mins", available: true },
+  { id: 2, name: "Shahi Biryani", price: 150, preparationTime: "22 mins", available: true },
+  { id: 3, name: "Fried Rice", price: 90, preparationTime: "20 mins", available: true },
+  { id: 4, name: "Fried Rice", price: 100, preparationTime: "20 mins", available: true },
 ];
 
 const sandwiches = [
   { id: 1, name: "Veg Sandwich", price: 80, preparationTime: "10 mins", available: true },
-  { id: 2, name: "Veg Cheese Sandwich", price: 90, preparationTime: "12 mins", available: true }
+  { id: 2, name: "Veg Cheese Sandwich", price: 90, preparationTime: "12 mins", available: true },
+  { id: 1, name: "Corn Sandwich", price: 90, preparationTime: "10 mins", available: true },
+  { id: 2, name: "Paneer Cheese Sandwich", price: 100, preparationTime: "12 mins", available: true },
+  { id: 1, name: "Madhuram Special Sandwich", price: 120, preparationTime: "10 mins", available: true }
+  
 ];
 
 const pizza = [
   { id: 1, name: "Margherita", price: 110, preparationTime: "15 mins", available: true },
-  { id: 2, name: "Farmhouse", price: 120, preparationTime: "18 mins", available: true }
+  { id: 2, name: "Farmhouse", price: 120, preparationTime: "18 mins", available: true },
+  { id: 3, name: "Paneer Pizza", price: 130, preparationTime: "15 mins", available: true },
+  { id: 4, name: "Corn Mushroom Pizza", price: 130, preparationTime: "18 mins", available: true },
+  { id: 5, name: "Cheese Burst Pizza", price: 150, preparationTime: "15 mins", available: true },
+  { id: 6, name: "Madhuram Special Pizza", price: 120, preparationTime: "18 mins", available: true },
+  { id: 7, name: "Kulhad Pizza", price: 110, preparationTime: "15 mins", available: true },
+  { id: 8, name: "Cheese Kulhad Pizza", price: 120, preparationTime: "18 mins", available: true },
+  { id: 9, name: "Paneer Kulhad Pizza", price: 110, preparationTime: "15 mins", available: true },
+  { id: 210, name: "Madhuram Special Kulhad Pizza", price: 120, preparationTime: "18 mins", available: true }
 ];
 
 const coffee = [
@@ -42,17 +64,29 @@ const drinks = [
 
 const Wraps = [
   { id: 1, name: "veg Wrap", price: 80, preparationTime: "2 mins", available: true },
-  { id: 2, name: "Paneer Wrap", price: 100, preparationTime: "3 mins", available: true }
+  { id: 2, name: "Paneer Wrap", price: 90, preparationTime: "3 mins", available: true },
+    { id: 2, name: "Malai Chaap Wrap", price: 100, preparationTime: "3 mins", available: true }
 ];
 
 const Desserts = [
-  { id: 1, name: "Rabdi", price: 40, preparationTime: "2 mins", available: true },
-  { id: 2, name: "Rashmalai", price: 50, preparationTime: "3 mins", available: true }
+  { id: 1, name: "Rabdi Shahi Tukda ", price: 80, preparationTime: "2 mins", available: true }
+  
 ];
 
 const Snacks = [
   { id: 1, name: "Maggi", price: 40, preparationTime: "2 mins", available: true },
+  { id: 2, name: "corn", price: 50, preparationTime: "3 mins", available: true },
+   { id: 1, name: "Maggi", price: 40, preparationTime: "2 mins", available: true },
+  { id: 2, name: "corn", price: 50, preparationTime: "3 mins", available: true },
+   { id: 1, name: "Maggi", price: 40, preparationTime: "2 mins", available: true },
+  { id: 2, name: "corn", price: 50, preparationTime: "3 mins", available: true },
+   { id: 1, name: "Maggi", price: 40, preparationTime: "2 mins", available: true },
+  { id: 2, name: "corn", price: 50, preparationTime: "3 mins", available: true },
+   { id: 1, name: "Maggi", price: 40, preparationTime: "2 mins", available: true },
+  { id: 2, name: "corn", price: 50, preparationTime: "3 mins", available: true },
+   { id: 1, name: "Maggi", price: 40, preparationTime: "2 mins", available: true },
   { id: 2, name: "corn", price: 50, preparationTime: "3 mins", available: true }
+
 ];
 
 const Chinese = [
