@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import { connectDB } from "./config/db.js";
 import authRouter from "./routes/auth.js";
@@ -20,17 +21,33 @@ app.use(express.json());
 // API routes
 app.use("/api/auth", authRouter);
 
-const distPath = path.join(__dirname, "../../frontend/dist");
-app.use(express.static(distPath));
+const distPath = path.join(__dirname, "../frontend/dist");
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(distPath, "index.html"));
+app.get("/health", (req, res) => {
+  res.json({
+    success: true,
+    message: "Backend is running successfully",
+  });
 });
+
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+} else {
+  app.get("*", (req, res) => {
+    res.status(404).json({
+      success: false,
+      message: "Frontend not built. Run 'npm run build' in the frontend/ directory.",
+    });
+  });
+}
 
 app.listen(port, () => {
   console.log(`Madhuram Cafe running at http://localhost:${port}`);
   if (!dbConnected)
     console.warn(
-      "Warning: MySQL not connected — auth endpoints will fail until DB is available."
+      "Warning: MongoDB not connected — auth endpoints will fail until DB is available."
     );
 });

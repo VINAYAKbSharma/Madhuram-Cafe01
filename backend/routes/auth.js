@@ -1,7 +1,7 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { getDb } from "../config/db.js";
+import User from "../models/User.js";
 
 const router = express.Router();
 
@@ -17,12 +17,8 @@ router.post("/register", async (req, res) => {
         .json({ success: false, message: "Mobile and password required" });
     }
 
-    const db = await getDb();
-    const [existingRows] = await db.query(
-      "SELECT id FROM users WHERE mobile = ?",
-      [mobile]
-    );
-    if (existingRows.length) {
+    const existing = await User.findOne({ mobile });
+    if (existing) {
       console.log("Register failed: mobile already registered", mobile);
       return res
         .status(409)
@@ -31,18 +27,16 @@ router.post("/register", async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
-    const [result] = await db.query(
-      "INSERT INTO users (fullName, mobile, email, password, address) VALUES (?, ?, ?, ?, ?)",
-      [
-        fullName || null,
-        mobile,
-        email || null,
-        hash,
-        JSON.stringify(address || {}),
-      ]
-    );
 
-    console.log("Register successful:", { id: result.insertId, mobile });
+    const user = await User.create({
+      fullName: fullName || null,
+      mobile,
+      email: email || null,
+      password: hash,
+      address: address || {},
+    });
+
+    console.log("Register successful:", { id: user._id, mobile });
     return res.json({ success: true, message: "Registered successfully" });
   } catch (err) {
     console.error("Register error:", err);
@@ -59,17 +53,12 @@ router.post("/login", async (req, res) => {
         .status(400)
         .json({ success: false, message: "Mobile and password required" });
 
-    const db = await getDb();
-    const [rows] = await db.query(
-      "SELECT id, fullName, mobile, password FROM users WHERE mobile = ?",
-      [mobile]
-    );
-    if (!rows.length)
+    const user = await User.findOne({ mobile });
+    if (!user)
       return res
         .status(401)
         .json({ success: false, message: "Invalid credentials" });
 
-    const user = rows[0];
     const match = await bcrypt.compare(password, user.password);
     if (!match)
       return res
@@ -77,14 +66,18 @@ router.post("/login", async (req, res) => {
         .json({ success: false, message: "Invalid credentials" });
 
     const token = jwt.sign(
-      { id: user.id, mobile: user.mobile },
+      { id: user._id, mobile: user.mobile },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "7d" }
     );
     return res.json({
       success: true,
       token,
-      user: { id: user.id, mobile: user.mobile, fullName: user.fullName },
+      user: {
+        id: user._id,
+        mobile: user.mobile,
+        fullName: user.fullName,
+      },
     });
   } catch (err) {
     console.error("Login error:", err);
@@ -95,11 +88,10 @@ router.post("/login", async (req, res) => {
 // GET /api/auth/users — list all registered users
 router.get("/users", async (req, res) => {
   try {
-    const db = await getDb();
-    const [rows] = await db.query(
-      "SELECT id, fullName, mobile, email, createdAt FROM users ORDER BY id DESC"
-    );
-    return res.json({ success: true, users: rows });
+    const users = await User.find({})
+      .select("fullName mobile email createdAt")
+      .sort({ createdAt: -1 });
+    return res.json({ success: true, users });
   } catch (err) {
     console.error("Fetch users error:", err);
     return res.status(500).json({ success: false, message: "Server error" });
