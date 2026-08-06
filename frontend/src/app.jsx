@@ -111,8 +111,21 @@ function App() {
       return;
     }
 
+    if (id === "menu") {
+      setAuthMode(null);
+      setShowProfile(false);
+      setShowCheckout(false);
+      setShowBookTable(false);
+      handleViewAll();
+      return;
+    }
+
+    setShowAllFood(false);
+    setSelectedCategory(null);
     setAuthMode(null);
     setShowProfile(false);
+    setShowCheckout(false);
+    setShowBookTable(false);
     setShowFooter(true);
   };
 

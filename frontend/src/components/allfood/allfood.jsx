@@ -53,13 +53,29 @@ const pizza = [
 ];
 
 const coffee = [
-  { id: 1, name: "Espresso", price: 90, preparationTime: "5 mins", available: true },
-  { id: 2, name: "Cappuccino", price: 130, preparationTime: "7 mins", available: true }
+  { id: 1, name: "Hot Coffee", price: 30, preparationTime: "5 mins", available: true },
+  { id: 2, name: "Black Coffee", price: 30, preparationTime: "7 mins", available: true },
+  { id: 3, name: "Cold Coffee", price: 100, preparationTime: "7 mins", available: true }
 ];
 
 const drinks = [
-  { id: 1, name: "Cold Drink", price: 40, preparationTime: "2 mins", available: true },
-  { id: 2, name: "Fresh Lime", price: 50, preparationTime: "3 mins", available: true }
+  { id: 1, name: "Classic Vanilla Shake", price: 70, preparationTime: "2 mins", available: true },
+  { id: 2, name: "Strawberry Shake", price: 90, preparationTime: "3 mins", available: true },
+   { id: 3, name: "ButterScotch Shske", price: 90, preparationTime: "2 mins", available: true },
+  { id: 4, name: "Chocolate Shake", price: 80, preparationTime: "3 mins", available: true },
+   { id: 5, name: "Double Chocolate Shake ", price: 90, preparationTime: "2 mins", available: true },
+  { id: 6, name: "Oreo Milk Shake ", price: 100, preparationTime: "3 mins", available: true },
+   { id: 7, name: "KitKat Shake", price: 100, preparationTime: "2 mins", available: true },
+  { id: 8, name: "Dry Fruit & Nut Shake", price: 110, preparationTime: "3 mins", available: true },
+   { id: 9, name: "Blueberry Mojito", price: 90, preparationTime: "2 mins", available: true },
+  { id: 10, name: "Mint Mojito", price: 90, preparationTime: "3 mins", available: true },
+   { id: 11, name: "Fruit Infusion", price: 90, preparationTime: "2 mins", available: true },
+  { id: 12, name: "Strawberry Mojito", price: 90, preparationTime: "3 mins", available: true },
+   { id: 13, name: "Watermelon Mojito", price: 90, preparationTime: "2 mins", available: true },
+  { id: 14, name: "Blue Moon Drink", price: 90, preparationTime: "3 mins", available: true },
+   { id: 15, name: "Litchi Mojito", price: 90, preparationTime: "2 mins", available: true },
+  { id: 16, name: "Kiwi Mojito", price: 90, preparationTime: "3 mins", available: true }
+
 ];
 
 const Wraps = [
@@ -74,24 +90,32 @@ const Desserts = [
 ];
 
 const Snacks = [
-  { id: 1, name: "Maggi", price: 40, preparationTime: "2 mins", available: true },
-  { id: 2, name: "corn", price: 50, preparationTime: "3 mins", available: true },
-   { id: 1, name: "Maggi", price: 40, preparationTime: "2 mins", available: true },
-  { id: 2, name: "corn", price: 50, preparationTime: "3 mins", available: true },
-   { id: 1, name: "Maggi", price: 40, preparationTime: "2 mins", available: true },
-  { id: 2, name: "corn", price: 50, preparationTime: "3 mins", available: true },
-   { id: 1, name: "Maggi", price: 40, preparationTime: "2 mins", available: true },
-  { id: 2, name: "corn", price: 50, preparationTime: "3 mins", available: true },
-   { id: 1, name: "Maggi", price: 40, preparationTime: "2 mins", available: true },
-  { id: 2, name: "corn", price: 50, preparationTime: "3 mins", available: true },
-   { id: 1, name: "Maggi", price: 40, preparationTime: "2 mins", available: true },
-  { id: 2, name: "corn", price: 50, preparationTime: "3 mins", available: true }
+  { id: 1, name: "Veg Maggi", price: 40, preparationTime: "2 mins", available: true },
+  { id: 2, name: "Kulhad Maggi", price: 50, preparationTime: "3 mins", available: true },
+   { id: 1, name: "Butter Cheese Maggi", price: 60, preparationTime: "2 mins", available: true },
+  { id: 2, name: "Matchstick Fries", price: 60, preparationTime: "3 mins", available: true },
+   { id: 1, name: "French Fries", price: 60, preparationTime: "2 mins", available: true },
+  { id: 2, name: "Peri Peri French Fries", price: 70, preparationTime: "3 mins", available: true },
+   { id: 1, name: "Masala Fries", price: 80, preparationTime: "2 mins", available: true },
+  { id: 2, name: "Masala Potato Twister", price: 90, preparationTime: "3 mins", available: true },
+   { id: 1, name: "Smokey Sweet Corn", price: 80, preparationTime: "2 mins", available: true },
+  { id: 2, name: "Honey Chilli Potato ", price: 100, preparationTime: "3 mins", available: true },
+   { id: 1, name: "Sweet Corn Chat", price: 90, preparationTime: "2 mins", available: true },
+  { id: 2, name: "Crispy Corn", price: 110, preparationTime: "3 mins", available: true }
 
 ];
 
 const Chinese = [
-  { id: 1, name: "manchurian", price: 40, preparationTime: "2 mins", available: true },
-  { id: 2, name: "nudels", price: 50, preparationTime: "3 mins", available: true }
+  { id: 1, name: "Dry Manchurian", price: 80, preparationTime: "2 mins", available: true },
+  { id: 2, name: "Veg Hakka Noodels", price: 90, preparationTime: "3 mins", available: true },
+  { id: 3, name: "Schezwan Rice", price: 90, preparationTime: "2 mins", available: true },
+  { id: 4, name: "Gravy Manchurian", price: 90, preparationTime: " 3 mins", available: true },
+  { id: 5, name: "Red Sauce Pasta", price: 90, preparationTime: "2 mins", available: true },
+  { id: 6, name: "White Shauce Pasta", price: 110, preparationTime: "3 mins", available: true },
+  { id: 7, name: "Schezwan Noodels", price: 110, preparationTime: "2 mins", available: true },
+  { id: 8, name: "Singapore Noodels", price: 110, preparationTime: "3 mins", available: true },
+  { id: 9, name: "Chilli Paneer", price: 140, preparationTime: "2 mins", available: true },
+  { id: 10, name: "Paneer 65", price: 150, preparationTime: "3 mins", available: true }
 ];
 
 function CategorySection({ title, items, onAddToCart }) {

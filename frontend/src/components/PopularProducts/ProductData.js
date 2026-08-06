@@ -8,9 +8,9 @@ import sandwich from "../../assets/products/sandwich1.jpg";
 const products = [
   {
     id: 1,
-    name: "Cappuccino",
+    name: "Cold Coffee",
     image: coffee,
-    price: 199,
+    price: 120,
     rating: 4.9,
     time: "15 min",
     offer: "20% OFF"
@@ -19,7 +19,7 @@ const products = [
     id: 2,
     name: "Cheese Burger",
     image: burger,
-    price: 249,
+    price: 60,
     rating: 4.8,
     time: "20 min",
     offer: "15% OFF"
@@ -28,7 +28,7 @@ const products = [
     id: 3,
     name: "Margherita Pizza",
     image: pizza,
-    price: 399,
+    price: 110,
     rating: 4.9,
     time: "25 min",
     offer: "25% OFF"
@@ -37,16 +37,16 @@ const products = [
     id: 4,
     name: "White Sauce Pasta",
     image: pasta,
-    price: 299,
+    price: 110,
     rating: 4.7,
     time: "18 min",
     offer: "10% OFF"
   },
   {
     id: 5,
-    name: "Chocolate Brownie",
+    name: "Shahi Rabdi ",
     image: brownie,
-    price: 179,
+    price: 110,
     rating: 4.9,
     time: "12 min",
     offer: "NEW"
@@ -55,7 +55,7 @@ const products = [
     id: 6,
     name: "Club Sandwich",
     image: sandwich,
-    price: 229,
+    price: 110,
     rating: 4.8,
     time: "15 min",
     offer: "BEST SELLER"
