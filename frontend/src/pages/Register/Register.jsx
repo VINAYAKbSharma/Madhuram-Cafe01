@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./Register.css";
+import { API_BASE_URL } from "../../config/api";
 
 function Register({ onClose, onLogin }) {
   const [formData, setFormData] = useState({
@@ -16,7 +17,7 @@ function Register({ onClose, onLogin }) {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

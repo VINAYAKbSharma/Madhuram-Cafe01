@@ -1,5 +1,6 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import "../Register/Register.css";
+import { API_BASE_URL } from "../../config/api";
 
 export default function LoginPage({ onClose, onRegister, onLoginSuccess }) {
   const [formData, setFormData] = useState({
@@ -13,7 +14,7 @@ export default function LoginPage({ onClose, onRegister, onLoginSuccess }) {
 
   const handleLogin = async () => {
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobile: formData.mobile, password: formData.password }),
