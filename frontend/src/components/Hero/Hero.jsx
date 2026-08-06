@@ -8,7 +8,7 @@ import {
 } from "react-icons/fa";
 
 import "./Hero.css";
-import heroData from "./Herodata";
+import heroData from "./herodata";
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
