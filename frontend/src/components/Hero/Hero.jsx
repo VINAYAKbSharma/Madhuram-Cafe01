@@ -1,4 +1,4 @@
-﻿import {
+import {
   FaArrowRight,
   FaMapMarkerAlt,
   FaStar,
@@ -8,7 +8,7 @@
 } from "react-icons/fa";
 
 import "./Hero.css";
-import HeroData from "./Herodata";
+import heroData from "./Herodata";
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
