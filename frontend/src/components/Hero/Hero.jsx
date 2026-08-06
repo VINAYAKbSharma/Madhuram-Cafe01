@@ -1,11 +1,5 @@
-import {
-  FaArrowRight,
-  FaMapMarkerAlt,
-  FaStar,
-  FaSearch,
-  FaClock,
-  FaMotorcycle
-} from "react-icons/fa";
+﻿import React from "react";
+import { FaChevronRight, FaMapMarkerAlt } from "react-icons/fa";
 
 import "./Hero.css";
 import heroData from "./HeroData";
@@ -17,129 +11,66 @@ import "swiper/css";
 import "swiper/css/pagination";
 
 function Hero() {
+  return (
+    <section id="home" className="hero-section">
+      {/* Delivery location header bar matching the image */}
+      <div className="hero-location-bar">
+        <FaMapMarkerAlt className="location-icon" />
+        <span>Deliver to: <strong>Panna Madhya Pradesh</strong></span>
+        <span className="location-arrow">▾</span>
+      </div>
 
-    return (
+      {/* Main hero card banner slider */}
+      <div className="hero-banner-container">
+        <Swiper
+          modules={[Autoplay, Pagination]}
+          autoplay={{
+            delay: 4500,
+            disableOnInteraction: false,
+          }}
+          pagination={{
+            clickable: true,
+          }}
+          loop={true}
+          className="heroSwiper"
+        >
+          {heroData.map((item) => (
+            <SwiperSlide key={item.id}>
+              <div
+                className="hero-slide-card"
+                style={{
+                  backgroundImage: `url(${item.image})`,
+                }}
+              >
+                <div className="hero-card-overlay"></div>
 
-    <section id="home" className="hero">
-      <Swiper
-        modules={[Autoplay, Pagination]}
-        autoplay={{
-          delay: 4000,
-          disableOnInteraction: false
-        }}
-        pagination={{
-          clickable: true
-        }}
-        loop={true}
-        className="heroSwiper"
-      >
-        {
+                <div className="hero-card-content">
+                  <h1 className="hero-title">
+                    {item.title.split("\n").map((line, index) => (
+                      <React.Fragment key={index}>
+                        {line}
+                        <br />
+                      </React.Fragment>
+                    ))}
+                  </h1>
 
-                    heroData.map((item)=>(
+                  <p className="hero-script-subtitle">{item.scriptSubtitle}</p>
 
-                        <SwiperSlide key={item.id}>
+                  <p className="hero-description">{item.description}</p>
 
-                            <div
-                                className="hero-slide"
-                                style={{
-                                    backgroundImage:`url(${item.image})`
-                                }}
-                            >
-
-                                <div className="overlay"></div>
-
-                                <div className="hero-container">
-
-                                    <div className="hero-content">
-
-    <div className="location">
-
-        <FaMapMarkerAlt />
-
-        <span>Deliver to Panna, Madhya Pradesh</span>
-
-    </div>
-
-    <h4>Madhuram Cafe</h4>
-
-    <h1>
-        {item.title.split("\n").map((line,index)=>
-
-            <span key={index}>
-                {line}
-                <br/>
-            </span>
-
-        )}
-    </h1>
-
-    <h3>{item.subtitle}</h3>
-
-    <p>{item.description}</p>
-
-
-</div>
-
-                                </div>
-<div className="floating-cards">
-
-    <div className="glass-card">
-
-        <FaStar className="gold"/>
-
-        <div>
-
-            <h3>4.9 Rating</h3>
-
-            <p>5000+ Happy Customers</p>
-
-        </div>
-
-    </div>
-
-    <div className="glass-card">
-
-        <FaClock className="gold"/>
-
-        <div>
-
-            <h3>25 Minutes</h3>
-
-            <p>Average Delivery</p>
-
-        </div>
-
-    </div>
-
-    <div className="glass-card">
-
-        <FaMotorcycle className="gold"/>
-
-        <div>
-
-            <h3>Free Delivery</h3>
-
-            <p>Above ₹499</p>
-
-        </div>
-
-    </div>
-
-</div>
-                            </div>
-
-                        </SwiperSlide>
-
-                    ))
-
-                }
-
-            </Swiper>
-
-        </section>
-
-    );
-
+                  <button className="hero-order-btn" type="button">
+                    <span>{item.buttonText}</span>
+                    <FaChevronRight className="btn-icon" />
+                  </button>
+                </div>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
+    </section>
+  );
 }
 
 export default Hero;
+
