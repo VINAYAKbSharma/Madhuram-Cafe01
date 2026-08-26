@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
@@ -55,10 +56,12 @@ router.post("/register", async (req, res) => {
     }
 
     let existingInDb = null;
-    try {
-      existingInDb = await User.findOne({ mobile });
-    } catch (dbErr) {
-      console.warn("MongoDB find user warning:", dbErr.message);
+    if (mongoose.connection.readyState === 1) {
+      try {
+        existingInDb = await User.findOne({ mobile });
+      } catch (dbErr) {
+        console.warn("MongoDB find user warning:", dbErr.message);
+      }
     }
 
     const existingInMem = inMemoryUsers.find((u) => u.mobile === mobile);
@@ -85,16 +88,18 @@ router.post("/register", async (req, res) => {
     inMemoryUsers.unshift(newUserObj);
     saveUsersToDisk(inMemoryUsers);
 
-    try {
-      await User.create({
-        fullName: fullName || null,
-        mobile,
-        email: email || null,
-        password: hash,
-        address: address || {},
-      });
-    } catch (dbErr) {
-      console.warn("MongoDB create user warning (saved to local fallback):", dbErr.message);
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await User.create({
+          fullName: fullName || null,
+          mobile,
+          email: email || null,
+          password: hash,
+          address: address || {},
+        });
+      } catch (dbErr) {
+        console.warn("MongoDB create user warning (saved to local fallback):", dbErr.message);
+      }
     }
 
     console.log("Register successful:", { id: newUserObj._id, mobile });
@@ -115,10 +120,12 @@ router.post("/login", async (req, res) => {
         .json({ success: false, message: "Mobile and password required" });
 
     let user = null;
-    try {
-      user = await User.findOne({ mobile });
-    } catch (dbErr) {
-      console.warn("MongoDB login search warning:", dbErr.message);
+    if (mongoose.connection.readyState === 1) {
+      try {
+        user = await User.findOne({ mobile });
+      } catch (dbErr) {
+        console.warn("MongoDB login search warning:", dbErr.message);
+      }
     }
 
     if (!user) {
@@ -160,13 +167,15 @@ router.post("/login", async (req, res) => {
 router.get("/users", async (req, res) => {
   try {
     let dbUsers = [];
-    try {
-      const docs = await User.find({})
-        .select("fullName mobile email createdAt")
-        .sort({ createdAt: -1 });
-      dbUsers = docs.map((doc) => (doc.toObject ? doc.toObject() : doc));
-    } catch (dbErr) {
-      console.warn("MongoDB fetch users warning:", dbErr.message);
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const docs = await User.find({})
+          .select("fullName mobile email createdAt")
+          .sort({ createdAt: -1 });
+        dbUsers = docs.map((doc) => (doc.toObject ? doc.toObject() : doc));
+      } catch (dbErr) {
+        console.warn("MongoDB fetch users warning:", dbErr.message);
+      }
     }
 
     const map = new Map();
@@ -185,7 +194,7 @@ router.get("/users", async (req, res) => {
     return res.json({ success: true, users: allUsers });
   } catch (err) {
     console.error("Fetch users error:", err);
-    return res.status(500).json({ success: false, users: inMemoryUsers });
+    return res.json({ success: true, users: inMemoryUsers });
   }
 });
 

@@ -30,6 +30,11 @@ app.get("/health", (req, res) => {
   });
 });
 
+// Catch-all for API endpoints that don't match any route, returning JSON 404 instead of HTML
+app.all("/api/*", (req, res) => {
+  res.status(404).json({ success: false, message: "API endpoint not found" });
+});
+
 // Serve static files from frontend build
 app.use(express.static(distPath));
 
