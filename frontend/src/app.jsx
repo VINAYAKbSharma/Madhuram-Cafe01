@@ -11,6 +11,7 @@ import PopularProducts from "./components/PopularProducts/PopularProducts";
 import OfferBanner from "./components/OfferBanner/OfferBanner";
 import ReviewCard from "./components/ReviewCard/ReviewCard";
 import Footer from "./components/Footer/Footer";
+import Orders from "./components/Orders/Orders";
 import Register from "./pages/Register/Register";
 import Login from "./pages/Login";
 import Checkout from "./pages/Checkout/Checkout";
@@ -29,6 +30,9 @@ function App() {
 
   const [authMode, setAuthMode] = useState(null); // null | "login" | "register"
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showOrders, setShowOrders] = useState(false);
+  const [activeTab, setActiveTab] = useState("home");
+  const [pendingTarget, setPendingTarget] = useState(null);
 
   const [couponCode, setCouponCode] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
@@ -37,7 +41,24 @@ function App() {
   const [showAllFood, setShowAllFood] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem("madhuram_user");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [orders, setOrders] = useState(() => {
+    try {
+      const saved = localStorage.getItem("madhuram_orders");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [showProfile, setShowProfile] = useState(false);
   const [showBookTable, setShowBookTable] = useState(false);
 
@@ -79,15 +100,61 @@ function App() {
 
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
+    try {
+      localStorage.setItem("madhuram_user", JSON.stringify(user));
+    } catch (e) {
+      console.error(e);
+    }
     setAuthMode(null);
-    setShowProfile(true);
-    setShowFooter(false);
+
+    if (pendingTarget === "orders") {
+      setPendingTarget(null);
+      setShowOrders(true);
+      setShowProfile(false);
+      setShowCheckout(false);
+      setShowBookTable(false);
+      setShowAllFood(false);
+      setActiveTab("orders");
+      setShowFooter(true);
+    } else {
+      setShowProfile(true);
+      setActiveTab("profile");
+      setShowFooter(false);
+    }
+  };
+
+  const handleRegisterSuccess = (user) => {
+    setCurrentUser(user);
+    try {
+      localStorage.setItem("madhuram_user", JSON.stringify(user));
+    } catch (e) {
+      console.error(e);
+    }
+    setAuthMode(null);
+
+    if (pendingTarget === "orders") {
+      setPendingTarget(null);
+      setShowOrders(true);
+      setShowProfile(false);
+      setShowCheckout(false);
+      setShowBookTable(false);
+      setShowAllFood(false);
+      setActiveTab("orders");
+      setShowFooter(true);
+    } else {
+      setShowProfile(true);
+      setActiveTab("profile");
+      setShowFooter(false);
+    }
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
     setShowProfile(false);
+    setShowOrders(false);
     localStorage.removeItem("token");
+    localStorage.removeItem("madhuram_user");
+    setActiveTab("home");
     setShowFooter(true);
   };
 
@@ -99,13 +166,33 @@ function App() {
     setIsCartOpen(false);
     setCouponMessage("");
     setCouponApplied(false);
+    setActiveTab(id);
+
+    if (id === "orders") {
+      if (currentUser) {
+        setShowOrders(true);
+        setShowProfile(false);
+        setShowCheckout(false);
+        setShowBookTable(false);
+        setShowAllFood(false);
+        setAuthMode(null);
+        setShowFooter(true);
+      } else {
+        setPendingTarget("orders");
+        alert("Please register first to open the Orders section!");
+        openRegister();
+      }
+      return;
+    }
 
     if (id === "profile") {
       if (currentUser) {
+        setShowOrders(false);
         setShowProfile(true);
         setAuthMode(null);
         setShowFooter(false);
       } else {
+        setPendingTarget("profile");
         openRegister();
       }
       return;
@@ -113,6 +200,7 @@ function App() {
 
     if (id === "menu") {
       setAuthMode(null);
+      setShowOrders(false);
       setShowProfile(false);
       setShowCheckout(false);
       setShowBookTable(false);
@@ -120,6 +208,8 @@ function App() {
       return;
     }
 
+    // Home
+    setShowOrders(false);
     setShowAllFood(false);
     setSelectedCategory(null);
     setAuthMode(null);
@@ -140,19 +230,56 @@ function App() {
   };
 
   // ===========================
-  // Checkout
+  // Checkout & Orders
   // ===========================
 
   const handleCheckout = () => {
     setIsCartOpen(false);
     setShowProfile(false);
     setShowBookTable(false);
+    setShowOrders(false);
     setShowCheckout(true);
     setShowFooter(false);
   };
 
   const handleBackFromCheckout = () => {
     setShowCheckout(false);
+    setShowFooter(true);
+  };
+
+  const handlePlaceOrder = (newOrder, whatsappURL) => {
+    const updatedOrders = [newOrder, ...orders];
+    setOrders(updatedOrders);
+    try {
+      localStorage.setItem("madhuram_orders", JSON.stringify(updatedOrders));
+    } catch (e) {
+      console.error(e);
+    }
+
+    // Ensure currentUser is updated if guest user provided details
+    if (!currentUser && newOrder.customer) {
+      const userObj = {
+        fullName: newOrder.customer.fullName || "Valued Customer",
+        mobile: newOrder.customer.mobile,
+      };
+      setCurrentUser(userObj);
+      try {
+        localStorage.setItem("madhuram_user", JSON.stringify(userObj));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Reset cart
+    setCartItems([]);
+
+    // Open WhatsApp URL
+    window.open(whatsappURL, "_blank");
+
+    // Navigate user directly to Orders Section
+    setShowCheckout(false);
+    setShowOrders(true);
+    setActiveTab("orders");
     setShowFooter(true);
   };
 
@@ -164,6 +291,7 @@ function App() {
     setIsCartOpen(false);
     setShowProfile(false);
     setShowCheckout(false);
+    setShowOrders(false);
     setAuthMode(null);
     setShowBookTable(true);
     setShowFooter(false);
@@ -254,38 +382,61 @@ function App() {
           )}
 
           {/* HOME */}
-          {!authMode && !showCheckout && !showProfile && !showBookTable && (
-            <>
-              <Hero />
+          {!authMode &&
+            !showCheckout &&
+            !showProfile &&
+            !showBookTable &&
+            !showOrders && (
+              <>
+                <Hero />
 
-              <CategoryCard
-                onViewAll={handleViewAll}
-                onBackHome={() => {
-                  setShowAllFood(false);
-                  setSelectedCategory(null);
-                  setShowFooter(true);
-                }}
-                showBackHome={showAllFood}
-              />
-
-              {showAllFood && (
-                <AllFood
-                  selectedCategory={selectedCategory}
-                  onAddToCart={addToCart}
-                  onClose={() => {
+                <CategoryCard
+                  onViewAll={handleViewAll}
+                  onBackHome={() => {
                     setShowAllFood(false);
                     setSelectedCategory(null);
                     setShowFooter(true);
                   }}
+                  showBackHome={showAllFood}
                 />
-              )}
 
-              <PopularProducts onAddToCart={addToCart} />
+                {showAllFood && (
+                  <AllFood
+                    selectedCategory={selectedCategory}
+                    onAddToCart={addToCart}
+                    onClose={() => {
+                      setShowAllFood(false);
+                      setSelectedCategory(null);
+                      setShowFooter(true);
+                    }}
+                  />
+                )}
 
-              <OfferBanner />
+                <PopularProducts onAddToCart={addToCart} />
 
-              <ReviewCard />
-            </>
+                <OfferBanner />
+
+                <ReviewCard />
+              </>
+            )}
+
+          {/* ORDERS */}
+          {showOrders && (
+            <Orders
+              orders={orders}
+              user={currentUser}
+              onBackHome={() => {
+                setShowOrders(false);
+                setActiveTab("home");
+                setShowFooter(true);
+              }}
+              onBrowseMenu={() => {
+                setShowOrders(false);
+                setShowAllFood(true);
+                setActiveTab("menu");
+                setShowFooter(true);
+              }}
+            />
           )}
 
           {/* LOGIN */}
@@ -293,6 +444,7 @@ function App() {
             <Login
               onClose={() => {
                 setAuthMode(null);
+                setPendingTarget(null);
                 setShowFooter(true);
               }}
               onRegister={() => setAuthMode("register")}
@@ -305,9 +457,11 @@ function App() {
             <Register
               onClose={() => {
                 setAuthMode(null);
+                setPendingTarget(null);
                 setShowFooter(true);
               }}
               onLogin={() => setAuthMode("login")}
+              onRegisterSuccess={handleRegisterSuccess}
             />
           )}
 
@@ -318,6 +472,7 @@ function App() {
               onLogout={handleLogout}
               onBackHome={() => {
                 setShowProfile(false);
+                setActiveTab("home");
                 setShowFooter(true);
               }}
             />
@@ -328,17 +483,28 @@ function App() {
             <Checkout
               cartItems={cartItems}
               onBack={handleBackFromCheckout}
+              onPlaceOrder={handlePlaceOrder}
             />
           )}
 
           {/* BOOK A TABLE */}
           {showBookTable && (
-            <BookTable onBack={handleBackFromBookTable} cartItems={cartItems} />
+            <BookTable
+              onBack={handleBackFromBookTable}
+              cartItems={cartItems}
+            />
           )}
 
           <Footer
-            visible={!authMode && !showCheckout && !showProfile && !showBookTable && showFooter}
+            visible={
+              !authMode &&
+              !showCheckout &&
+              !showProfile &&
+              !showBookTable &&
+              showFooter
+            }
             onNavigate={handleNavigate}
+            activeTab={activeTab}
           />
         </>
       )}

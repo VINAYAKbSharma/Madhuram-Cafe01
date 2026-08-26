@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./Checkout.css";
 
-function Checkout({ onBack, cartItems })  {
+function Checkout({ onBack, cartItems, onPlaceOrder }) {
   const [formData, setFormData] = useState({
     fullName: "",
     mobile: "",
@@ -14,15 +14,15 @@ function Checkout({ onBack, cartItems })  {
   });
 
   const subtotal = cartItems.reduce(
-  (total, item) => total + item.price * item.qty,
-  0
-);
+    (total, item) => total + item.price * item.qty,
+    0
+  );
 
-const deliveryCharge = subtotal > 499 ? 0 : 49;
+  const deliveryCharge = subtotal > 499 ? 0 : 49;
 
-const gst = Math.round(subtotal * 0.05);
+  const gst = Math.round(subtotal * 0.05);
 
-const total = subtotal + gst + deliveryCharge;
+  const total = subtotal + gst + deliveryCharge;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -34,16 +34,16 @@ const total = subtotal + gst + deliveryCharge;
   };
 
   const handleSubmit = (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const orderItems = cartItems
-    .map(
-      (item) =>
-        `🍽 ${item.name}\nQty: ${item.qty}\nPrice: ₹${item.price * item.qty}`
-    )
-    .join("\n\n");
+    const orderItems = cartItems
+      .map(
+        (item) =>
+          `🍽 ${item.name}\nQty: ${item.qty}\nPrice: ₹${item.price * item.qty}`
+      )
+      .join("\n\n");
 
-  const message = `
+    const message = `
 🍽 *NEW FOOD ORDER*
 
 👤 *Customer Details*
@@ -76,12 +76,46 @@ Delivery : ${deliveryCharge === 0 ? "FREE" : `₹${deliveryCharge}`}
 💳 Payment : ${formData.payment}
 `;
 
-  const cafeNumber = "919691634045"; // India country code + number
+    const cafeNumber = "919691634045"; // India country code + number
 
-const whatsappURL = `https://wa.me/${cafeNumber}?text=${encodeURIComponent(message)}`;
+    const whatsappURL = `https://wa.me/${cafeNumber}?text=${encodeURIComponent(message)}`;
 
-window.open(whatsappURL, "_blank");
-};
+    const newOrder = {
+      id: Math.floor(100000 + Math.random() * 900000).toString(),
+      date: new Date().toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      items: cartItems.map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        qty: item.qty,
+        image: item.image,
+      })),
+      subtotal,
+      gst,
+      deliveryCharge,
+      total,
+      payment: formData.payment,
+      address: `${formData.house}, ${formData.street}, ${formData.landmark ? formData.landmark + ", " : ""}${formData.city} - ${formData.pincode}`,
+      customer: {
+        fullName: formData.fullName,
+        mobile: formData.mobile,
+      },
+      status: "Confirmed",
+      deliveryMessage: "Deliver in 15 to 20 minute",
+    };
+
+    if (onPlaceOrder) {
+      onPlaceOrder(newOrder, whatsappURL);
+    } else {
+      window.open(whatsappURL, "_blank");
+    }
+  };
   return (
     <div className="checkout-page">
       <div className="checkout-card">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./Footer.css";
 
 import {
@@ -17,8 +17,12 @@ const footerItems = [
   { id: "profile", icon: FaUser, label: "Profile" }
 ];
 
-function Footer({ visible = true, onNavigate }) {
-  const [active, setActive] = useState("home");
+function Footer({ visible = true, onNavigate, activeTab = "home" }) {
+  const [active, setActive] = useState(activeTab);
+
+  useEffect(() => {
+    setActive(activeTab);
+  }, [activeTab]);
 
   const handleFooterClick = (id) => {
     setActive(id);
