@@ -15,12 +15,31 @@ function CartDrawer({
   onBookTable,
   onHomeDelivery
 }) {
+  const MIN_ORDER_AMOUNT = 200;
   const subtotal = cartItems.reduce((total, item) => total + item.price * item.qty, 0);
   const discount = couponApplied ? Math.round(subtotal * 0.2) : 0;
   const discountedSubtotal = subtotal - discount;
-  const gst = Math.round(discountedSubtotal * 0.05);
-  const delivery = subtotal > 499 ? 0 : 49;
-  const total = discountedSubtotal + gst + delivery;
+  const delivery = subtotal === 0 ? 0 : (subtotal > 499 ? 0 : 20);
+  const packagingFee = subtotal > 0 ? 10 : 0;
+  const total = discountedSubtotal + delivery + packagingFee;
+  const isMinOrderMet = subtotal >= MIN_ORDER_AMOUNT || subtotal === 0;
+  const minOrderDifference = MIN_ORDER_AMOUNT - subtotal;
+
+  const handleCheckoutClick = () => {
+    if (cartItems.length > 0 && subtotal < MIN_ORDER_AMOUNT) {
+      alert(`Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Please add ₹${minOrderDifference} more worth of items.`);
+      return;
+    }
+    onCheckout();
+  };
+
+  const handleBookTableClick = () => {
+    if (cartItems.length > 0 && subtotal < MIN_ORDER_AMOUNT) {
+      alert(`Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Please add ₹${minOrderDifference} more worth of items.`);
+      return;
+    }
+    onBookTable();
+  };
 
   return (
     <div className="cart-overlay cart-overlay--visible" onClick={onClose}>
@@ -86,23 +105,39 @@ function CartDrawer({
             </div>
           )}
           <div>
-            <span>GST</span>
-            <b>₹{gst}</b>
+            <span>Delivery Fee</span>
+            <b>{delivery === 0 ? "FREE" : `₹${delivery}`}</b>
           </div>
           <div>
-            <span>Delivery</span>
-            <b>₹{delivery}</b>
+            <span>Packaging Fee</span>
+            <b>₹{packagingFee}</b>
           </div>
           <hr />
           <div className="cart-drawer__grand">
             <span>Total</span>
             <b>₹{total}</b>
           </div>
+
+          {!isMinOrderMet && cartItems.length > 0 && (
+            <div
+              className="min-order-warning"
+              style={{
+                color: "#ff4d4d",
+                fontSize: "13px",
+                marginTop: "10px",
+                textAlign: "center",
+                fontWeight: "500",
+              }}
+            >
+              ⚠️ Minimum order amount is ₹{MIN_ORDER_AMOUNT} (Add ₹{minOrderDifference} more)
+            </div>
+          )}
+
           <div className="cart-drawer__actions">
-            <button className="cart-drawer__checkout cart-drawer__button--primary" type="button" onClick={onBookTable}>
+            <button className="cart-drawer__checkout cart-drawer__button--primary" type="button" onClick={handleBookTableClick}>
               Book a Table
             </button>
-            <button className="cart-drawer__checkout cart-drawer__button--secondary" type="button" onClick={onCheckout}>
+            <button className="cart-drawer__checkout cart-drawer__button--secondary" type="button" onClick={handleCheckoutClick}>
               Home Delivery
             </button>
           </div>

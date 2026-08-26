@@ -25,6 +25,19 @@ function Register({ onClose, onLogin, onRegisterSuccess }) {
       mobile: formData.mobile,
       email: formData.email,
     };
+
+    // Save to local accounts store
+    try {
+      const existingRaw = localStorage.getItem("madhuram_registered_users");
+      const existingList = existingRaw ? JSON.parse(existingRaw) : [];
+      if (!existingList.some((u) => u.mobile === userObj.mobile)) {
+        existingList.push(userObj);
+        localStorage.setItem("madhuram_registered_users", JSON.stringify(existingList));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
     try {
       const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",

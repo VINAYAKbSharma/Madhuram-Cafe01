@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import SplashScreen from "./components/SplashScreen/SplashScreen";
 import Navbar from "./components/Navbar/Navbar";
@@ -18,12 +18,40 @@ import Checkout from "./pages/Checkout/Checkout";
 import BookTable from "./pages/BookTable/BookTable";
 import Profile from "./pages/Profile/Profile";
 
+const getOrdersForUser = (user) => {
+  try {
+    const allOrdersRaw = localStorage.getItem("madhuram_orders");
+    const allOrders = allOrdersRaw ? JSON.parse(allOrdersRaw) : [];
+
+    if (!user || !user.mobile) {
+      return [];
+    }
+
+    const userSpecificRaw = localStorage.getItem(`madhuram_orders_${user.mobile}`);
+    const userSpecific = userSpecificRaw ? JSON.parse(userSpecificRaw) : [];
+
+    const filteredFromAll = allOrders.filter(
+      (o) => o.customer?.mobile === user.mobile || o.userMobile === user.mobile
+    );
+
+    const map = new Map();
+    [...userSpecific, ...filteredFromAll].forEach((order) => {
+      if (order && order.id) {
+        map.set(order.id, order);
+      }
+    });
+
+    return Array.from(map.values());
+  } catch (e) {
+    console.error("Error loading user orders:", e);
+    return [];
+  }
+};
+
 function App() {
   const [loading, setLoading] = useState(true);
 
-  const [cartItems, setCartItems] = useState(
-    initialCartItems.map((item) => ({ ...item }))
-  );
+  const [cartItems, setCartItems] = useState([]);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [showFooter, setShowFooter] = useState(true);
@@ -50,19 +78,17 @@ function App() {
     }
   });
 
-  const [orders, setOrders] = useState(() => {
-    try {
-      const saved = localStorage.getItem("madhuram_orders");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [orders, setOrders] = useState(() => getOrdersForUser(currentUser));
 
   const [showProfile, setShowProfile] = useState(false);
   const [showBookTable, setShowBookTable] = useState(false);
 
   const cartCount = cartItems.reduce((total, item) => total + item.qty, 0);
+
+  // Sync orders automatically when user changes (login, register, mount)
+  useEffect(() => {
+    setOrders(getOrdersForUser(currentUser));
+  }, [currentUser]);
 
   // ===========================
   // Cart
@@ -150,6 +176,7 @@ function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setOrders([]);
     setShowProfile(false);
     setShowOrders(false);
     localStorage.removeItem("token");
@@ -248,27 +275,71 @@ function App() {
   };
 
   const handlePlaceOrder = (newOrder, whatsappURL) => {
-    const updatedOrders = [newOrder, ...orders];
-    setOrders(updatedOrders);
+    const mobile = currentUser?.mobile || newOrder.customer?.mobile;
+
+    const orderWithMobile = {
+      ...newOrder,
+      userMobile: mobile,
+    };
+
+    // Save to global list
+    let allOrders = [];
     try {
-      localStorage.setItem("madhuram_orders", JSON.stringify(updatedOrders));
+      const savedAll = localStorage.getItem("madhuram_orders");
+      allOrders = savedAll ? JSON.parse(savedAll) : [];
+    } catch {
+      allOrders = [];
+    }
+    const updatedAll = [
+      orderWithMobile,
+      ...allOrders.filter((o) => o.id !== orderWithMobile.id),
+    ];
+    try {
+      localStorage.setItem("madhuram_orders", JSON.stringify(updatedAll));
     } catch (e) {
       console.error(e);
     }
 
-    // Ensure currentUser is updated if guest user provided details
-    if (!currentUser && newOrder.customer) {
-      const userObj = {
-        fullName: newOrder.customer.fullName || "Valued Customer",
-        mobile: newOrder.customer.mobile,
-      };
-      setCurrentUser(userObj);
+    // Save to user-specific list if mobile exists
+    if (mobile) {
+      let userOrders = [];
       try {
-        localStorage.setItem("madhuram_user", JSON.stringify(userObj));
+        const savedUser = localStorage.getItem(`madhuram_orders_${mobile}`);
+        userOrders = savedUser ? JSON.parse(savedUser) : [];
+      } catch {
+        userOrders = [];
+      }
+      const updatedUser = [
+        orderWithMobile,
+        ...userOrders.filter((o) => o.id !== orderWithMobile.id),
+      ];
+      try {
+        localStorage.setItem(
+          `madhuram_orders_${mobile}`,
+          JSON.stringify(updatedUser)
+        );
       } catch (e) {
         console.error(e);
       }
     }
+
+    // Ensure user is created and permanently logged in if guest checkout
+    let activeUser = currentUser;
+    if (!activeUser && newOrder.customer) {
+      activeUser = {
+        fullName: newOrder.customer.fullName || "Valued Customer",
+        mobile: newOrder.customer.mobile,
+      };
+      setCurrentUser(activeUser);
+      try {
+        localStorage.setItem("madhuram_user", JSON.stringify(activeUser));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Update state
+    setOrders(getOrdersForUser(activeUser));
 
     // Reset cart
     setCartItems([]);
@@ -484,6 +555,7 @@ function App() {
               cartItems={cartItems}
               onBack={handleBackFromCheckout}
               onPlaceOrder={handlePlaceOrder}
+              currentUser={currentUser}
             />
           )}
 

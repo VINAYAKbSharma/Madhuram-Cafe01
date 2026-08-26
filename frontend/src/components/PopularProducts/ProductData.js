@@ -10,7 +10,7 @@ const products = [
     id: 1,
     name: "Cold Coffee",
     image: coffee,
-    price: 120,
+    price: 100,
     rating: 4.9,
     time: "15 min",
     offer: "20% OFF"
@@ -53,7 +53,7 @@ const products = [
   },
   {
     id: 6,
-    name: "Club Sandwich",
+    name: "Madhuram Special Sandwich",
     image: sandwich,
     price: 110,
     rating: 4.8,

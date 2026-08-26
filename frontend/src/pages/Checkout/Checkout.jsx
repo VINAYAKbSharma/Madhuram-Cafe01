@@ -1,10 +1,10 @@
 import { useState } from "react";
 import "./Checkout.css";
 
-function Checkout({ onBack, cartItems, onPlaceOrder }) {
+function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
   const [formData, setFormData] = useState({
-    fullName: "",
-    mobile: "",
+    fullName: currentUser?.fullName || "",
+    mobile: currentUser?.mobile || "",
     house: "",
     street: "",
     landmark: "",
@@ -13,16 +13,17 @@ function Checkout({ onBack, cartItems, onPlaceOrder }) {
     payment: "Cash on Delivery",
   });
 
+  const MIN_ORDER_AMOUNT = 200;
+
   const subtotal = cartItems.reduce(
     (total, item) => total + item.price * item.qty,
     0
   );
 
-  const deliveryCharge = subtotal > 499 ? 0 : 49;
+  const deliveryCharge = subtotal > 499 ? 0 : 20;
+  const packagingFee = subtotal > 0 ? 10 : 0;
 
-  const gst = Math.round(subtotal * 0.05);
-
-  const total = subtotal + gst + deliveryCharge;
+  const total = subtotal + deliveryCharge + packagingFee;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,6 +36,11 @@ function Checkout({ onBack, cartItems, onPlaceOrder }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (subtotal < MIN_ORDER_AMOUNT) {
+      alert(`Minimum order amount is ₹${MIN_ORDER_AMOUNT}. Please add ₹${MIN_ORDER_AMOUNT - subtotal} more worth of items.`);
+      return;
+    }
 
     const orderItems = cartItems
       .map(
@@ -68,8 +74,8 @@ ${orderItems}
 --------------------------------
 
 Subtotal : ₹${subtotal}
-GST : ₹${gst}
 Delivery : ${deliveryCharge === 0 ? "FREE" : `₹${deliveryCharge}`}
+Packaging Fee : ₹${packagingFee}
 
 💰 *Grand Total : ₹${total}*
 
@@ -97,8 +103,8 @@ Delivery : ${deliveryCharge === 0 ? "FREE" : `₹${deliveryCharge}`}
         image: item.image,
       })),
       subtotal,
-      gst,
       deliveryCharge,
+      packagingFee,
       total,
       payment: formData.payment,
       address: `${formData.house}, ${formData.street}, ${formData.landmark ? formData.landmark + ", " : ""}${formData.city} - ${formData.pincode}`,
@@ -263,15 +269,15 @@ Delivery : ${deliveryCharge === 0 ? "FREE" : `₹${deliveryCharge}`}
   </div>
 
   <div className="summary-item">
-    <span>GST</span>
-    <strong>₹{gst}</strong>
-  </div>
-
-  <div className="summary-item">
-    <span>Delivery</span>
+    <span>Delivery Fee</span>
     <strong>
       {deliveryCharge === 0 ? "FREE" : `₹${deliveryCharge}`}
     </strong>
+  </div>
+
+  <div className="summary-item">
+    <span>Packaging Fee</span>
+    <strong>₹{packagingFee}</strong>
   </div>
 
   <hr />
