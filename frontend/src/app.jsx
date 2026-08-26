@@ -141,12 +141,13 @@ function App() {
     };
   }, [currentUser]);
 
-  // Listen for secret #admin or ?admin URL route
+  // Listen for secret #admin, /admin, or ?admin URL route
   useEffect(() => {
     const checkAdminRoute = () => {
       const hash = window.location.hash.toLowerCase();
       const search = window.location.search.toLowerCase();
-      if (hash === "#admin" || search.includes("admin")) {
+      const pathname = window.location.pathname.toLowerCase();
+      if (hash === "#admin" || search.includes("admin") || pathname.endsWith("/admin") || pathname.includes("/admin/")) {
         setShowAdmin(true);
         setShowOrders(false);
         setShowProfile(false);
@@ -160,7 +161,11 @@ function App() {
 
     checkAdminRoute();
     window.addEventListener("hashchange", checkAdminRoute);
-    return () => window.removeEventListener("hashchange", checkAdminRoute);
+    window.addEventListener("popstate", checkAdminRoute);
+    return () => {
+      window.removeEventListener("hashchange", checkAdminRoute);
+      window.removeEventListener("popstate", checkAdminRoute);
+    };
   }, []);
 
   // ===========================
