@@ -84,12 +84,39 @@ function App() {
 
   const [showProfile, setShowProfile] = useState(false);
   const [showBookTable, setShowBookTable] = useState(false);
+  const [userToastNotif, setUserToastNotif] = useState(null);
 
   const cartCount = cartItems.reduce((total, item) => total + item.qty, 0);
 
   // Sync orders automatically when user changes (login, register, mount)
   useEffect(() => {
     setOrders(getOrdersForUser(currentUser));
+  }, [currentUser]);
+
+  // Listen for order confirmation notifications for user
+  useEffect(() => {
+    const handleOrderConfirmed = (e) => {
+      if (e.detail) {
+        if (!currentUser || !e.detail.mobile || e.detail.mobile === currentUser.mobile) {
+          setUserToastNotif(e.detail);
+          setOrders(getOrdersForUser(currentUser));
+        }
+      }
+    };
+
+    const handleStorage = (e) => {
+      if (!e.key || e.key === "madhuram_orders" || (currentUser && e.key === `madhuram_orders_${currentUser.mobile}`)) {
+        setOrders(getOrdersForUser(currentUser));
+      }
+    };
+
+    window.addEventListener("madhuram_order_confirmed", handleOrderConfirmed);
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("madhuram_order_confirmed", handleOrderConfirmed);
+      window.removeEventListener("storage", handleStorage);
+    };
   }, [currentUser]);
 
   // Listen for secret #admin or ?admin URL route
@@ -628,6 +655,74 @@ function App() {
               onBack={handleBackFromBookTable}
               cartItems={cartItems}
             />
+          )}
+
+          {/* Real-time User Order Confirmed Toast Notification */}
+          {userToastNotif && (
+            <div
+              style={{
+                position: "fixed",
+                top: "20px",
+                right: "20px",
+                zIndex: 9999,
+                background: "linear-gradient(135deg, #1e293b, #0f172a)",
+                color: "#ffffff",
+                border: "2px solid #22c55e",
+                borderRadius: "16px",
+                padding: "16px 20px",
+                boxShadow: "0 12px 35px rgba(0,0,0,0.6)",
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+                maxWidth: "380px",
+              }}
+            >
+              <div style={{ fontSize: "32px" }}>🎉</div>
+              <div>
+                <strong style={{ fontSize: "15px", color: "#4ade80", display: "block" }}>
+                  {userToastNotif.title || "Order Confirmed!"}
+                </strong>
+                <p style={{ margin: "4px 0 10px 0", fontSize: "13px", color: "#e2e8f0", lineHeight: "1.4" }}>
+                  {userToastNotif.message}
+                </p>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUserToastNotif(null);
+                      handleNavigate("orders");
+                    }}
+                    style={{
+                      background: "#22c55e",
+                      color: "#fff",
+                      border: "none",
+                      padding: "6px 14px",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                      fontWeight: "700",
+                      cursor: "pointer",
+                    }}
+                  >
+                    View Order
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUserToastNotif(null)}
+                    style={{
+                      background: "transparent",
+                      color: "#94a3b8",
+                      border: "1px solid #475569",
+                      padding: "6px 12px",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
 
           <Footer

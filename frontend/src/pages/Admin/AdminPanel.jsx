@@ -28,6 +28,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
 
   const [ordersList, setOrdersList] = useState([]);
   const [clientsList, setClientsList] = useState([]);
+  const [newOrderAlert, setNewOrderAlert] = useState(null);
 
   // Load data from localStorage
   const loadData = () => {
@@ -54,6 +55,56 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
     }
   }, [isAuthenticated]);
 
+  // Real-time listener for incoming new orders
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const checkNewOrders = () => {
+      try {
+        const rawOrders = localStorage.getItem("madhuram_orders");
+        const parsedOrders = rawOrders ? JSON.parse(rawOrders) : [];
+
+        setOrdersList((prevList) => {
+          const prevPending = prevList.filter((o) => o.status === "Pending").length;
+          const currentPending = parsedOrders.filter((o) => o.status === "Pending").length;
+
+          if (parsedOrders.length > prevList.length || currentPending > prevPending) {
+            const latestPending = parsedOrders.find((o) => o.status === "Pending");
+            if (latestPending && latestPending.id !== newOrderAlert?.id) {
+              setNewOrderAlert(latestPending);
+            }
+          }
+          return parsedOrders;
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    const handleStorageChange = (e) => {
+      if (!e.key || e.key === "madhuram_orders") {
+        checkNewOrders();
+      }
+    };
+
+    const handleNewOrderEvent = (e) => {
+      if (e.detail) {
+        setNewOrderAlert(e.detail);
+        loadData();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("madhuram_new_order", handleNewOrderEvent);
+    const interval = setInterval(checkNewOrders, 3000);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("madhuram_new_order", handleNewOrderEvent);
+      clearInterval(interval);
+    };
+  }, [isAuthenticated, newOrderAlert]);
+
   // Handle Admin Login
   const handleLoginSubmit = (e) => {
     e.preventDefault();
@@ -74,6 +125,75 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
   const handleLogout = () => {
     setIsAuthenticated(false);
     sessionStorage.removeItem("madhuram_admin_session");
+  };
+
+  // Confirm Order (Pending -> Confirmed)
+  const handleConfirmOrder = (orderId) => {
+    try {
+      const rawOrders = localStorage.getItem("madhuram_orders");
+      const allOrders = rawOrders ? JSON.parse(rawOrders) : [];
+      const targetOrder = allOrders.find((o) => o.id === orderId);
+
+      const updatedAllOrders = allOrders.map((o) =>
+        o.id === orderId
+          ? { ...o, status: "Confirmed", deliveryMessage: "Deliver in 15 to 20 minute" }
+          : o
+      );
+
+      localStorage.setItem("madhuram_orders", JSON.stringify(updatedAllOrders));
+      setOrdersList(updatedAllOrders);
+
+      // Update user specific orders list
+      const mobile = targetOrder?.userMobile || targetOrder?.customer?.mobile;
+      if (mobile) {
+        const rawUserOrders = localStorage.getItem(`madhuram_orders_${mobile}`);
+        if (rawUserOrders) {
+          const userOrders = JSON.parse(rawUserOrders);
+          const updatedUserOrders = userOrders.map((o) =>
+            o.id === orderId
+              ? { ...o, status: "Confirmed", deliveryMessage: "Deliver in 15 to 20 minute" }
+              : o
+          );
+          localStorage.setItem(
+            `madhuram_orders_${mobile}`,
+            JSON.stringify(updatedUserOrders)
+          );
+        }
+
+        // Save User Notification
+        const userNotifsRaw = localStorage.getItem(`madhuram_notifs_${mobile}`);
+        const userNotifs = userNotifsRaw ? JSON.parse(userNotifsRaw) : [];
+        const newNotif = {
+          id: Date.now().toString(),
+          orderId,
+          title: "Order Confirmed! 🎉",
+          message: `Your Order #${orderId} has been confirmed by Madhuram Cafe! Food is being prepared.`,
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          read: false,
+        };
+        localStorage.setItem(`madhuram_notifs_${mobile}`, JSON.stringify([newNotif, ...userNotifs]));
+      }
+
+      // Dispatch global window event for real-time notification to user
+      window.dispatchEvent(
+        new CustomEvent("madhuram_order_confirmed", {
+          detail: {
+            orderId,
+            mobile,
+            title: "Order Confirmed! 🎉",
+            message: `Your Order #${orderId} has been confirmed by Madhuram Cafe!`,
+          },
+        })
+      );
+
+      if (newOrderAlert?.id === orderId) {
+        setNewOrderAlert(null);
+      }
+
+      onOrdersUpdated && onOrdersUpdated();
+    } catch (err) {
+      console.error("Error confirming order:", err);
+    }
   };
 
   // Mark Order as Delivered
@@ -106,6 +226,10 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
             JSON.stringify(updatedUserOrders)
           );
         }
+      }
+
+      if (newOrderAlert?.id === orderId) {
+        setNewOrderAlert(null);
       }
 
       onOrdersUpdated && onOrdersUpdated();
@@ -251,6 +375,39 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
       </header>
 
       <div className="admin-content-container">
+        {/* Real-time New Order Notification Banner */}
+        {newOrderAlert && (
+          <div className="new-order-alert-banner">
+            <div className="alert-text">
+              <span className="alert-pulse">🔔</span>
+              <div>
+                <strong>New Order Received! Order #{newOrderAlert.id}</strong>
+                <p>
+                  Customer: {newOrderAlert.customer?.fullName || "Valued Customer"} (
+                  {newOrderAlert.customer?.mobile || "No Mobile"}) — Total: ₹
+                  {newOrderAlert.total}
+                </p>
+              </div>
+            </div>
+            <div className="alert-actions">
+              <button
+                type="button"
+                className="confirm-order-btn-fast"
+                onClick={() => handleConfirmOrder(newOrderAlert.id)}
+              >
+                <FaCheckCircle /> Confirm Order Now
+              </button>
+              <button
+                type="button"
+                className="dismiss-alert-btn"
+                onClick={() => setNewOrderAlert(null)}
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Metric Summary Cards */}
         <div className="metrics-grid">
           <div className="metric-card revenue">
@@ -368,10 +525,17 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
               <div className="admin-orders-list">
                 {filteredOrders.map((order) => {
                   const isDelivered = order.status === "Delivered";
+                  const isConfirmed = order.status === "Confirmed";
+                  const isPending = !isDelivered && !isConfirmed;
+
                   return (
                     <div
                       className={`admin-order-card ${
-                        isDelivered ? "is-delivered" : "is-pending"
+                        isDelivered
+                          ? "is-delivered"
+                          : isConfirmed
+                          ? "is-confirmed"
+                          : "is-pending"
                       }`}
                       key={order.id}
                     >
@@ -387,16 +551,24 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
 
                         <span
                           className={`admin-status-badge ${
-                            isDelivered ? "status-delivered" : "status-pending"
+                            isDelivered
+                              ? "status-delivered"
+                              : isConfirmed
+                              ? "status-confirmed"
+                              : "status-pending"
                           }`}
                         >
                           {isDelivered ? (
                             <>
                               <FaCheckCircle /> Delivered
                             </>
+                          ) : isConfirmed ? (
+                            <>
+                              <FaCheckCircle /> Confirmed - Food Preparing
+                            </>
                           ) : (
                             <>
-                              <FaClock /> Preparing / Out for Delivery
+                              <FaClock /> Pending Admin Confirmation
                             </>
                           )}
                         </span>
@@ -424,6 +596,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
                           <span className="info-label">Payment:</span>
                           <span className="info-val">
                             {order.payment || "Cash on Delivery"}
+                            {order.transactionId ? ` (UTR: ${order.transactionId})` : ""}
                           </span>
                         </div>
                       </div>
@@ -449,19 +622,33 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
                           <strong>₹{order.total}</strong>
                         </div>
 
-                        {!isDelivered ? (
-                          <button
-                            type="button"
-                            className="confirm-delivery-btn"
-                            onClick={() => handleConfirmDelivery(order.id)}
-                          >
-                            <FaCheckCircle /> Mark as Delivered
-                          </button>
-                        ) : (
-                          <div className="delivered-confirmed-tag">
-                            <FaCheckCircle /> Delivery Confirmed
-                          </div>
-                        )}
+                        <div className="admin-actions-group">
+                          {isPending && (
+                            <button
+                              type="button"
+                              className="confirm-order-action-btn"
+                              onClick={() => handleConfirmOrder(order.id)}
+                            >
+                              <FaCheckCircle /> Confirm Order
+                            </button>
+                          )}
+
+                          {!isDelivered && (
+                            <button
+                              type="button"
+                              className="confirm-delivery-btn"
+                              onClick={() => handleConfirmDelivery(order.id)}
+                            >
+                              <FaCheckCircle /> Mark as Delivered
+                            </button>
+                          )}
+
+                          {isDelivered && (
+                            <div className="delivered-confirmed-tag">
+                              <FaCheckCircle /> Delivery Confirmed
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );

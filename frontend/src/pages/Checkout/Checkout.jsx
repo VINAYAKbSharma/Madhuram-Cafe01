@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./Checkout.css";
+import upiQrImage from "../../assets/upi_qr.jpg";
 
 function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
   const [formData, setFormData] = useState({
@@ -12,6 +13,12 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
     pincode: "",
     payment: "Cash on Delivery",
   });
+
+  const [transactionId, setTransactionId] = useState("");
+  const [copiedUpi, setCopiedUpi] = useState(false);
+
+  const UPI_ID = "9691634045@ptaxis";
+  const PAYEE_NAME = "Roopendra Singh Parihar";
 
   const MIN_ORDER_AMOUNT = 200;
 
@@ -34,6 +41,16 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
     }));
   };
 
+  const handleCopyUpi = () => {
+    try {
+      navigator.clipboard.writeText(UPI_ID);
+      setCopiedUpi(true);
+      setTimeout(() => setCopiedUpi(false), 2000);
+    } catch {
+      alert(`UPI ID: ${UPI_ID}`);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -48,6 +65,14 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
           `🍽 ${item.name}\nQty: ${item.qty}\nPrice: ₹${item.price * item.qty}`
       )
       .join("\n\n");
+
+    const utrSection = transactionId.trim()
+      ? `\n🔖 *Transaction ID / UTR*: ${transactionId.trim()}`
+      : "";
+
+    const upiNote = formData.payment.includes("UPI")
+      ? `\n\n📌 *Note*: If paid via QR/UPI, please attach your payment screenshot here after sending!`
+      : "";
 
     const message = `
 🍽 *NEW FOOD ORDER*
@@ -79,7 +104,7 @@ Packaging Fee : ₹${packagingFee}
 
 💰 *Grand Total : ₹${total}*
 
-💳 Payment : ${formData.payment}
+💳 Payment : ${formData.payment}${utrSection}${upiNote}
 `;
 
     const cafeNumber = "919691634045"; // India country code + number
@@ -107,14 +132,21 @@ Packaging Fee : ₹${packagingFee}
       packagingFee,
       total,
       payment: formData.payment,
+      transactionId: transactionId.trim() || null,
       address: `${formData.house}, ${formData.street}, ${formData.landmark ? formData.landmark + ", " : ""}${formData.city} - ${formData.pincode}`,
       customer: {
         fullName: formData.fullName,
         mobile: formData.mobile,
       },
-      status: "Confirmed",
-      deliveryMessage: "Deliver in 15 to 20 minute",
+      status: "Pending",
+      deliveryMessage: "Pending Admin Confirmation",
     };
+
+    try {
+      window.dispatchEvent(new CustomEvent("madhuram_new_order", { detail: newOrder }));
+    } catch {
+      // ignore
+    }
 
     if (onPlaceOrder) {
       onPlaceOrder(newOrder, whatsappURL);
@@ -241,7 +273,57 @@ Packaging Fee : ₹${packagingFee}
                 UPI on Delivery
               </label>
 
+              <label>
+                <input
+                  type="radio"
+                  name="payment"
+                  value="Pay via UPI (Scan & Pay)"
+                  checked={formData.payment === "Pay via UPI (Scan & Pay)"}
+                  onChange={handleChange}
+                />
+                Pay via UPI (Scan & Pay)
+              </label>
+
             </div>
+
+            {formData.payment === "Pay via UPI (Scan & Pay)" && (
+              <div className="upi-payment-box">
+                <div className="upi-header">
+                  <h4>Scan & Pay with any UPI App</h4>
+                  <p>Payee: <strong>{PAYEE_NAME}</strong></p>
+                </div>
+
+                <div className="upi-qr-container">
+                  <img src={upiQrImage} alt="Madhuram Cafe UPI QR Code" className="upi-qr-img" />
+                </div>
+
+                <div className="upi-id-box">
+                  <span className="upi-id-text">UPI ID: <strong>{UPI_ID}</strong></span>
+                  <button type="button" className="copy-upi-btn" onClick={handleCopyUpi}>
+                    {copiedUpi ? "Copied! ✓" : "Copy"}
+                  </button>
+                </div>
+
+                <div className="upi-app-link">
+                  <a
+                    href={`upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${total}&cu=INR&tn=${encodeURIComponent("Madhuram Cafe Order")}`}
+                    className="upi-app-btn"
+                  >
+                    ⚡ Open UPI App (GPay / PhonePe / Paytm)
+                  </a>
+                </div>
+
+                <div className="form-group transaction-id-group">
+                  <label>UPI Transaction ID / UTR <span className="optional">(Optional)</span></label>
+                  <input
+                    type="text"
+                    placeholder="Enter 12-digit UTR / Ref No. after payment"
+                    value={transactionId}
+                    onChange={(e) => setTransactionId(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 <hr />
 

@@ -47,8 +47,28 @@ function Orders({ orders = [], onBackHome, onBrowseMenu, user }) {
                     <span className="order-id">Order #{order.id}</span>
                     <span className="order-date">{order.date}</span>
                   </div>
-                  <span className={`status-pill ${order.status === "Delivered" ? "status-delivered" : ""}`}>
-                    <FaCheckCircle /> {order.status || "Confirmed"}
+                  <span
+                    className={`status-pill ${
+                      order.status === "Delivered"
+                        ? "status-delivered"
+                        : order.status === "Confirmed"
+                        ? "status-confirmed"
+                        : "status-pending"
+                    }`}
+                  >
+                    {order.status === "Delivered" ? (
+                      <>
+                        <FaCheckCircle /> Delivered
+                      </>
+                    ) : order.status === "Confirmed" ? (
+                      <>
+                        <FaCheckCircle /> Confirmed
+                      </>
+                    ) : (
+                      <>
+                        <FaClock /> Pending Confirmation
+                      </>
+                    )}
                   </span>
                 </div>
 
@@ -61,12 +81,20 @@ function Orders({ orders = [], onBackHome, onBrowseMenu, user }) {
                       <span className="delivery-time delivered-text">Order Delivered Successfully!</span>
                     </div>
                   </div>
-                ) : (
-                  <div className="delivery-banner">
-                    <FaClock className="clock-icon" />
+                ) : order.status === "Confirmed" ? (
+                  <div className="delivery-banner confirmed-banner">
+                    <FaCheckCircle className="clock-icon confirmed-icon" style={{ color: "#22c55e" }} />
                     <div className="delivery-text">
-                      <span className="delivery-title">Estimated Delivery</span>
-                      <span className="delivery-time">Deliver in 15 to 20 minute</span>
+                      <span className="delivery-title">Order Confirmed 🎉</span>
+                      <span className="delivery-time" style={{ color: "#22c55e" }}>Food is being prepared! Deliver in 15 to 20 minute</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="delivery-banner pending-banner">
+                    <FaClock className="clock-icon pending-icon" style={{ color: "#f59e0b" }} />
+                    <div className="delivery-text">
+                      <span className="delivery-title">Order Status</span>
+                      <span className="delivery-time" style={{ color: "#f59e0b" }}>⏳ Waiting for Admin Confirmation...</span>
                     </div>
                   </div>
                 )}

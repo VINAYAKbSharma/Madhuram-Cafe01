@@ -643,3 +643,124 @@
   font-size: 20px;
   margin-bottom: 8px;
 }
+
+/* Real-Time Admin New Order Alert Banner */
+.new-order-alert-banner {
+  background: linear-gradient(135deg, #ff6b00 0%, #ff8800 100%);
+  color: #fff;
+  border-radius: 16px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 10px 30px rgba(255, 107, 0, 0.4);
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 15px rgba(255, 107, 0, 0.4); }
+  50% { box-shadow: 0 0 30px rgba(255, 107, 0, 0.8); }
+  100% { box-shadow: 0 0 15px rgba(255, 107, 0, 0.4); }
+}
+
+.alert-text {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.alert-pulse {
+  font-size: 28px;
+  animation: ringBell 1s infinite alternate ease-in-out;
+}
+
+@keyframes ringBell {
+  0% { transform: rotate(-15deg); }
+  100% { transform: rotate(15deg); }
+}
+
+.alert-text strong {
+  font-size: 17px;
+  display: block;
+}
+
+.alert-text p {
+  font-size: 13px;
+  margin: 2px 0 0 0;
+  opacity: 0.9;
+}
+
+.alert-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.confirm-order-btn-fast {
+  background: #ffffff;
+  color: #ff6b00;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.confirm-order-btn-fast:hover {
+  transform: scale(1.04);
+  background: #fff8f5;
+}
+
+.dismiss-alert-btn {
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* Card Actions Group & Statuses */
+.admin-actions-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.confirm-order-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.confirm-order-action-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.admin-order-card.is-confirmed {
+  border-left: 4px solid #3b82f6;
+}
+
+.admin-status-badge.status-confirmed {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
