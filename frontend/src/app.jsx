@@ -18,6 +18,7 @@ import Checkout from "./pages/Checkout/Checkout";
 import BookTable from "./pages/BookTable/BookTable";
 import Profile from "./pages/Profile/Profile";
 import AdminPanel from "./pages/Admin/AdminPanel";
+import { API_BASE_URL } from "./config/api";
 
 const getOrdersForUser = (user) => {
   try {
@@ -91,6 +92,27 @@ function App() {
   // Sync orders automatically when user changes (login, register, mount)
   useEffect(() => {
     setOrders(getOrdersForUser(currentUser));
+  }, [currentUser]);
+
+  // Sync user orders from central API periodically
+  useEffect(() => {
+    const fetchUserOrders = async () => {
+      const mobile = currentUser?.mobile;
+      if (!mobile) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/orders/user/${mobile}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.orders)) {
+            setOrders(data.orders);
+          }
+        }
+      } catch (err) {}
+    };
+
+    fetchUserOrders();
+    const interval = setInterval(fetchUserOrders, 5000);
+    return () => clearInterval(interval);
   }, [currentUser]);
 
   // Listen for order confirmation notifications for user
@@ -354,7 +376,7 @@ function App() {
     };
 
     // 1. Send Order to Central Backend Database/API
-    fetch("/api/orders", {
+    fetch(`${API_BASE_URL}/api/orders`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(orderWithMobile),

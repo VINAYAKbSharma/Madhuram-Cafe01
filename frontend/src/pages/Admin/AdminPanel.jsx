@@ -12,6 +12,7 @@ import {
   FaSearch,
 } from "react-icons/fa";
 import { ADMIN_CREDENTIALS } from "../../config/adminConfig";
+import { API_BASE_URL } from "../../config/api";
 import "./AdminPanel.css";
 
 function AdminPanel({ onBackHome, onOrdersUpdated }) {
@@ -33,7 +34,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
   // Load data from central API & localStorage fallback
   const loadData = async () => {
     try {
-      const res = await fetch("/api/orders");
+      const res = await fetch(`${API_BASE_URL}/api/orders`);
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.orders)) {
@@ -56,11 +57,29 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
     }
 
     try {
-      const rawClients = localStorage.getItem("madhuram_registered_users");
-      const parsedClients = rawClients ? JSON.parse(rawClients) : [];
-      setClientsList(parsedClients);
+      const userRes = await fetch(`${API_BASE_URL}/api/auth/users`);
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        if (userData.success && Array.isArray(userData.users)) {
+          setClientsList(userData.users);
+          try {
+            localStorage.setItem("madhuram_registered_users", JSON.stringify(userData.users));
+          } catch {}
+        } else {
+          const rawClients = localStorage.getItem("madhuram_registered_users");
+          setClientsList(rawClients ? JSON.parse(rawClients) : []);
+        }
+      } else {
+        const rawClients = localStorage.getItem("madhuram_registered_users");
+        setClientsList(rawClients ? JSON.parse(rawClients) : []);
+      }
     } catch {
-      setClientsList([]);
+      try {
+        const rawClients = localStorage.getItem("madhuram_registered_users");
+        setClientsList(rawClients ? JSON.parse(rawClients) : []);
+      } catch {
+        setClientsList([]);
+      }
     }
   };
 
@@ -78,7 +97,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
       try {
         let currentOrders = [];
         try {
-          const res = await fetch("/api/orders");
+          const res = await fetch(`${API_BASE_URL}/api/orders`);
           if (res.ok) {
             const data = await res.json();
             if (data.success && Array.isArray(data.orders)) {
@@ -159,7 +178,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
   const handleConfirmOrder = async (orderId) => {
     try {
       // 1. Update central backend database/API
-      fetch(`/api/orders/${orderId}/status`, {
+      fetch(`${API_BASE_URL}/api/orders/${orderId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -238,7 +257,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
   const handleConfirmDelivery = async (orderId) => {
     try {
       // 1. Update central backend database/API
-      fetch(`/api/orders/${orderId}/status`, {
+      fetch(`${API_BASE_URL}/api/orders/${orderId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

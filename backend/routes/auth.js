@@ -2,8 +2,45 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const router = express.Router();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DATA_DIR = path.join(__dirname, "../data");
+const USERS_FILE = path.join(DATA_DIR, "users.json");
+
+const loadUsersFromDisk = () => {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    if (fs.existsSync(USERS_FILE)) {
+      const content = fs.readFileSync(USERS_FILE, "utf-8");
+      const parsed = JSON.parse(content);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+  } catch (err) {
+    console.warn("Failed to load users from disk:", err.message);
+  }
+  return [];
+};
+
+const saveUsersToDisk = (users) => {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Failed to save users to disk:", err.message);
+  }
+};
+
+const inMemoryUsers = loadUsersFromDisk();
 
 // POST /api/auth/register
 router.post("/register", async (req, res) => {
@@ -17,8 +54,15 @@ router.post("/register", async (req, res) => {
         .json({ success: false, message: "Mobile and password required" });
     }
 
-    const existing = await User.findOne({ mobile });
-    if (existing) {
+    let existingInDb = null;
+    try {
+      existingInDb = await User.findOne({ mobile });
+    } catch (dbErr) {
+      console.warn("MongoDB find user warning:", dbErr.message);
+    }
+
+    const existingInMem = inMemoryUsers.find((u) => u.mobile === mobile);
+    if (existingInDb || existingInMem) {
       console.log("Register failed: mobile already registered", mobile);
       return res
         .status(409)
@@ -28,15 +72,32 @@ router.post("/register", async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
 
-    const user = await User.create({
+    const newUserObj = {
+      _id: Date.now().toString(),
       fullName: fullName || null,
       mobile,
       email: email || null,
       password: hash,
       address: address || {},
-    });
+      createdAt: new Date().toISOString(),
+    };
 
-    console.log("Register successful:", { id: user._id, mobile });
+    inMemoryUsers.unshift(newUserObj);
+    saveUsersToDisk(inMemoryUsers);
+
+    try {
+      await User.create({
+        fullName: fullName || null,
+        mobile,
+        email: email || null,
+        password: hash,
+        address: address || {},
+      });
+    } catch (dbErr) {
+      console.warn("MongoDB create user warning (saved to local fallback):", dbErr.message);
+    }
+
+    console.log("Register successful:", { id: newUserObj._id, mobile });
     return res.json({ success: true, message: "Registered successfully" });
   } catch (err) {
     console.error("Register error:", err);
@@ -53,7 +114,17 @@ router.post("/login", async (req, res) => {
         .status(400)
         .json({ success: false, message: "Mobile and password required" });
 
-    const user = await User.findOne({ mobile });
+    let user = null;
+    try {
+      user = await User.findOne({ mobile });
+    } catch (dbErr) {
+      console.warn("MongoDB login search warning:", dbErr.message);
+    }
+
+    if (!user) {
+      user = inMemoryUsers.find((u) => u.mobile === mobile);
+    }
+
     if (!user)
       return res
         .status(401)
@@ -66,7 +137,7 @@ router.post("/login", async (req, res) => {
         .json({ success: false, message: "Invalid credentials" });
 
     const token = jwt.sign(
-      { id: user._id, mobile: user.mobile },
+      { id: user._id || user.id, mobile: user.mobile },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "7d" }
     );
@@ -74,7 +145,7 @@ router.post("/login", async (req, res) => {
       success: true,
       token,
       user: {
-        id: user._id,
+        id: user._id || user.id,
         mobile: user.mobile,
         fullName: user.fullName,
       },
@@ -88,13 +159,33 @@ router.post("/login", async (req, res) => {
 // GET /api/auth/users — list all registered users
 router.get("/users", async (req, res) => {
   try {
-    const users = await User.find({})
-      .select("fullName mobile email createdAt")
-      .sort({ createdAt: -1 });
-    return res.json({ success: true, users });
+    let dbUsers = [];
+    try {
+      const docs = await User.find({})
+        .select("fullName mobile email createdAt")
+        .sort({ createdAt: -1 });
+      dbUsers = docs.map((doc) => (doc.toObject ? doc.toObject() : doc));
+    } catch (dbErr) {
+      console.warn("MongoDB fetch users warning:", dbErr.message);
+    }
+
+    const map = new Map();
+    [...inMemoryUsers, ...dbUsers].forEach((u) => {
+      if (u && u.mobile && !map.has(u.mobile)) {
+        map.set(u.mobile, {
+          fullName: u.fullName,
+          mobile: u.mobile,
+          email: u.email,
+          createdAt: u.createdAt,
+        });
+      }
+    });
+
+    const allUsers = Array.from(map.values());
+    return res.json({ success: true, users: allUsers });
   } catch (err) {
     console.error("Fetch users error:", err);
-    return res.status(500).json({ success: false, message: "Server error" });
+    return res.status(500).json({ success: false, users: inMemoryUsers });
   }
 });
 

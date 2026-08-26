@@ -1,10 +1,45 @@
 import express from "express";
 import Order from "../models/Order.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const router = express.Router();
 
-// Fallback in-memory store for orders if MongoDB is offline
-const inMemoryOrders = [];
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DATA_DIR = path.join(__dirname, "../data");
+const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
+
+const loadOrdersFromDisk = () => {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    if (fs.existsSync(ORDERS_FILE)) {
+      const content = fs.readFileSync(ORDERS_FILE, "utf-8");
+      const parsed = JSON.parse(content);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+  } catch (err) {
+    console.warn("Failed to load orders from disk:", err.message);
+  }
+  return [];
+};
+
+const saveOrdersToDisk = (orders) => {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Failed to save orders to disk:", err.message);
+  }
+};
+
+// Fallback in-memory store for orders if MongoDB is offline (initialized from disk)
+const inMemoryOrders = loadOrdersFromDisk();
 
 // Helper to format order for response
 const formatOrder = (doc) => {
@@ -66,6 +101,7 @@ router.post("/", async (req, res) => {
     } else {
       inMemoryOrders.unshift(newOrderData);
     }
+    saveOrdersToDisk(inMemoryOrders);
 
     // Try saving to MongoDB if connected
     try {
@@ -130,6 +166,7 @@ router.patch("/:id/status", async (req, res) => {
     if (memOrder) {
       if (status) memOrder.status = status;
       if (deliveryMessage) memOrder.deliveryMessage = deliveryMessage;
+      saveOrdersToDisk(inMemoryOrders);
     }
 
     // Update MongoDB
