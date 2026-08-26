@@ -47,19 +47,29 @@ function Orders({ orders = [], onBackHome, onBrowseMenu, user }) {
                     <span className="order-id">Order #{order.id}</span>
                     <span className="order-date">{order.date}</span>
                   </div>
-                  <span className="status-pill">
+                  <span className={`status-pill ${order.status === "Delivered" ? "status-delivered" : ""}`}>
                     <FaCheckCircle /> {order.status || "Confirmed"}
                   </span>
                 </div>
 
                 {/* Delivery Time Estimate Box */}
-                <div className="delivery-banner">
-                  <FaClock className="clock-icon" />
-                  <div className="delivery-text">
-                    <span className="delivery-title">Estimated Delivery</span>
-                    <span className="delivery-time">Deliver in 15 to 20 minute</span>
+                {order.status === "Delivered" ? (
+                  <div className="delivery-banner delivered-banner">
+                    <FaCheckCircle className="clock-icon delivered-icon" />
+                    <div className="delivery-text">
+                      <span className="delivery-title">Order Status</span>
+                      <span className="delivery-time delivered-text">Order Delivered Successfully!</span>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="delivery-banner">
+                    <FaClock className="clock-icon" />
+                    <div className="delivery-text">
+                      <span className="delivery-title">Estimated Delivery</span>
+                      <span className="delivery-time">Deliver in 15 to 20 minute</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Items List */}
                 <div className="order-items-list">

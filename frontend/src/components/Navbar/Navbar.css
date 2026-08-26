@@ -148,6 +148,28 @@ body {
   justify-content: center;
 }
 
+.admin-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 20px;
+  background: rgba(212, 167, 98, 0.15);
+  color: #d4a762;
+  border: 1px solid rgba(212, 167, 98, 0.3);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.admin-nav-btn:hover {
+  background: #d4a762;
+  color: #111;
+  transform: translateY(-2px);
+}
+
 /* ========================= */
 /* Mobile */
 /* ========================= */

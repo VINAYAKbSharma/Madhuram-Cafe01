@@ -17,6 +17,7 @@ import Login from "./pages/Login";
 import Checkout from "./pages/Checkout/Checkout";
 import BookTable from "./pages/BookTable/BookTable";
 import Profile from "./pages/Profile/Profile";
+import AdminPanel from "./pages/Admin/AdminPanel";
 
 const getOrdersForUser = (user) => {
   try {
@@ -59,6 +60,7 @@ function App() {
   const [authMode, setAuthMode] = useState(null); // null | "login" | "register"
   const [showCheckout, setShowCheckout] = useState(false);
   const [showOrders, setShowOrders] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
   const [pendingTarget, setPendingTarget] = useState(null);
 
@@ -89,6 +91,28 @@ function App() {
   useEffect(() => {
     setOrders(getOrdersForUser(currentUser));
   }, [currentUser]);
+
+  // Listen for secret #admin or ?admin URL route
+  useEffect(() => {
+    const checkAdminRoute = () => {
+      const hash = window.location.hash.toLowerCase();
+      const search = window.location.search.toLowerCase();
+      if (hash === "#admin" || search.includes("admin")) {
+        setShowAdmin(true);
+        setShowOrders(false);
+        setShowProfile(false);
+        setShowCheckout(false);
+        setShowBookTable(false);
+        setShowAllFood(false);
+        setAuthMode(null);
+        setShowFooter(false);
+      }
+    };
+
+    checkAdminRoute();
+    window.addEventListener("hashchange", checkAdminRoute);
+    return () => window.removeEventListener("hashchange", checkAdminRoute);
+  }, []);
 
   // ===========================
   // Cart
@@ -136,6 +160,7 @@ function App() {
     if (pendingTarget === "orders") {
       setPendingTarget(null);
       setShowOrders(true);
+      setShowAdmin(false);
       setShowProfile(false);
       setShowCheckout(false);
       setShowBookTable(false);
@@ -144,6 +169,7 @@ function App() {
       setShowFooter(true);
     } else {
       setShowProfile(true);
+      setShowAdmin(false);
       setActiveTab("profile");
       setShowFooter(false);
     }
@@ -161,6 +187,7 @@ function App() {
     if (pendingTarget === "orders") {
       setPendingTarget(null);
       setShowOrders(true);
+      setShowAdmin(false);
       setShowProfile(false);
       setShowCheckout(false);
       setShowBookTable(false);
@@ -169,6 +196,7 @@ function App() {
       setShowFooter(true);
     } else {
       setShowProfile(true);
+      setShowAdmin(false);
       setActiveTab("profile");
       setShowFooter(false);
     }
@@ -179,6 +207,7 @@ function App() {
     setOrders([]);
     setShowProfile(false);
     setShowOrders(false);
+    setShowAdmin(false);
     localStorage.removeItem("token");
     localStorage.removeItem("madhuram_user");
     setActiveTab("home");
@@ -194,6 +223,20 @@ function App() {
     setCouponMessage("");
     setCouponApplied(false);
     setActiveTab(id);
+
+    if (id === "admin") {
+      setShowAdmin(true);
+      setShowOrders(false);
+      setShowProfile(false);
+      setShowCheckout(false);
+      setShowBookTable(false);
+      setShowAllFood(false);
+      setAuthMode(null);
+      setShowFooter(false);
+      return;
+    }
+
+    setShowAdmin(false);
 
     if (id === "orders") {
       if (currentUser) {
@@ -265,6 +308,7 @@ function App() {
     setShowProfile(false);
     setShowBookTable(false);
     setShowOrders(false);
+    setShowAdmin(false);
     setShowCheckout(true);
     setShowFooter(false);
   };
@@ -363,6 +407,7 @@ function App() {
     setShowProfile(false);
     setShowCheckout(false);
     setShowOrders(false);
+    setShowAdmin(false);
     setAuthMode(null);
     setShowBookTable(true);
     setShowFooter(false);
@@ -457,7 +502,8 @@ function App() {
             !showCheckout &&
             !showProfile &&
             !showBookTable &&
-            !showOrders && (
+            !showOrders &&
+            !showAdmin && (
               <>
                 <Hero />
 
@@ -490,6 +536,23 @@ function App() {
                 <ReviewCard />
               </>
             )}
+
+          {/* ADMIN PANEL */}
+          {showAdmin && (
+            <AdminPanel
+              onBackHome={() => {
+                if (window.location.hash.toLowerCase() === "#admin") {
+                  window.location.hash = "";
+                }
+                setShowAdmin(false);
+                setActiveTab("home");
+                setShowFooter(true);
+              }}
+              onOrdersUpdated={() => {
+                setOrders(getOrdersForUser(currentUser));
+              }}
+            />
+          )}
 
           {/* ORDERS */}
           {showOrders && (
@@ -573,6 +636,7 @@ function App() {
               !showCheckout &&
               !showProfile &&
               !showBookTable &&
+              !showAdmin &&
               showFooter
             }
             onNavigate={handleNavigate}
