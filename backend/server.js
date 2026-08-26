@@ -4,6 +4,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { connectDB } from "./config/db.js";
 import authRouter from "./routes/auth.js";
+import ordersRouter from "./routes/orders.js";
 import cors from "cors";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -18,6 +19,7 @@ app.use(express.json());
 
 // API routes
 app.use("/api/auth", authRouter);
+app.use("/api/orders", ordersRouter);
 
 const distPath = path.join(__dirname, "../frontend/dist");
 

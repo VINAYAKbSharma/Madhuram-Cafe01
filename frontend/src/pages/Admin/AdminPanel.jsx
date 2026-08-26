@@ -30,14 +30,29 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
   const [clientsList, setClientsList] = useState([]);
   const [newOrderAlert, setNewOrderAlert] = useState(null);
 
-  // Load data from localStorage
-  const loadData = () => {
+  // Load data from central API & localStorage fallback
+  const loadData = async () => {
     try {
-      const rawOrders = localStorage.getItem("madhuram_orders");
-      const parsedOrders = rawOrders ? JSON.parse(rawOrders) : [];
-      setOrdersList(parsedOrders);
+      const res = await fetch("/api/orders");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.orders)) {
+          setOrdersList(data.orders);
+          try {
+            localStorage.setItem("madhuram_orders", JSON.stringify(data.orders));
+          } catch {}
+        }
+      } else {
+        const rawOrders = localStorage.getItem("madhuram_orders");
+        setOrdersList(rawOrders ? JSON.parse(rawOrders) : []);
+      }
     } catch {
-      setOrdersList([]);
+      try {
+        const rawOrders = localStorage.getItem("madhuram_orders");
+        setOrdersList(rawOrders ? JSON.parse(rawOrders) : []);
+      } catch {
+        setOrdersList([]);
+      }
     }
 
     try {
@@ -55,26 +70,39 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
     }
   }, [isAuthenticated]);
 
-  // Real-time listener for incoming new orders
+  // Real-time listener for incoming new orders across all devices
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const checkNewOrders = () => {
+    const checkNewOrders = async () => {
       try {
-        const rawOrders = localStorage.getItem("madhuram_orders");
-        const parsedOrders = rawOrders ? JSON.parse(rawOrders) : [];
+        let currentOrders = [];
+        try {
+          const res = await fetch("/api/orders");
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && Array.isArray(data.orders)) {
+              currentOrders = data.orders;
+            }
+          }
+        } catch {}
+
+        if (currentOrders.length === 0) {
+          const rawOrders = localStorage.getItem("madhuram_orders");
+          currentOrders = rawOrders ? JSON.parse(rawOrders) : [];
+        }
 
         setOrdersList((prevList) => {
           const prevPending = prevList.filter((o) => o.status === "Pending").length;
-          const currentPending = parsedOrders.filter((o) => o.status === "Pending").length;
+          const currentPending = currentOrders.filter((o) => o.status === "Pending").length;
 
-          if (parsedOrders.length > prevList.length || currentPending > prevPending) {
-            const latestPending = parsedOrders.find((o) => o.status === "Pending");
+          if (currentOrders.length > prevList.length || currentPending > prevPending) {
+            const latestPending = currentOrders.find((o) => o.status === "Pending");
             if (latestPending && latestPending.id !== newOrderAlert?.id) {
               setNewOrderAlert(latestPending);
             }
           }
-          return parsedOrders;
+          return currentOrders;
         });
       } catch (err) {
         console.error(err);
@@ -128,8 +156,18 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
   };
 
   // Confirm Order (Pending -> Confirmed)
-  const handleConfirmOrder = (orderId) => {
+  const handleConfirmOrder = async (orderId) => {
     try {
+      // 1. Update central backend database/API
+      fetch(`/api/orders/${orderId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "Confirmed",
+          deliveryMessage: "Deliver in 15 to 20 minute",
+        }),
+      }).catch((err) => console.warn("Backend status sync warning:", err));
+
       const rawOrders = localStorage.getItem("madhuram_orders");
       const allOrders = rawOrders ? JSON.parse(rawOrders) : [];
       const targetOrder = allOrders.find((o) => o.id === orderId);
@@ -197,8 +235,18 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
   };
 
   // Mark Order as Delivered
-  const handleConfirmDelivery = (orderId) => {
+  const handleConfirmDelivery = async (orderId) => {
     try {
+      // 1. Update central backend database/API
+      fetch(`/api/orders/${orderId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "Delivered",
+          deliveryMessage: "Order Delivered Successfully!",
+        }),
+      }).catch((err) => console.warn("Backend status sync warning:", err));
+
       // Update global orders list
       const rawOrders = localStorage.getItem("madhuram_orders");
       const allOrders = rawOrders ? JSON.parse(rawOrders) : [];

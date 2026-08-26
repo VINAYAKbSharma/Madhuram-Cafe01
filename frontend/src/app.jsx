@@ -353,7 +353,14 @@ function App() {
       userMobile: mobile,
     };
 
-    // Save to global list
+    // 1. Send Order to Central Backend Database/API
+    fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderWithMobile),
+    }).catch((err) => console.warn("Backend sync notice:", err));
+
+    // 2. Save to global local list
     let allOrders = [];
     try {
       const savedAll = localStorage.getItem("madhuram_orders");
@@ -371,7 +378,7 @@ function App() {
       console.error(e);
     }
 
-    // Save to user-specific list if mobile exists
+    // 3. Save to user-specific list if mobile exists
     if (mobile) {
       let userOrders = [];
       try {
