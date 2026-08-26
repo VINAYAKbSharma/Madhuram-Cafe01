@@ -249,41 +249,41 @@ Packaging Fee : ₹${packagingFee}
           <div className="form-group">
             <label>Payment Method</label>
 
-            <div className="payment-options">
+            <div className="payment-options-wrapper">
+              <div className="payment-options">
+                <label className={`payment-option-label ${formData.payment === "Cash on Delivery" ? "selected" : ""}`}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="Cash on Delivery"
+                    checked={formData.payment === "Cash on Delivery"}
+                    onChange={handleChange}
+                  />
+                  <span>💵 Cash on Delivery</span>
+                </label>
 
-              <label>
-                <input
-                  type="radio"
-                  name="payment"
-                  value="Cash on Delivery"
-                  checked={formData.payment === "Cash on Delivery"}
-                  onChange={handleChange}
-                />
-                Cash on Delivery
-              </label>
+                <label className={`payment-option-label ${formData.payment === "UPI on Delivery" ? "selected" : ""}`}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="UPI on Delivery"
+                    checked={formData.payment === "UPI on Delivery"}
+                    onChange={handleChange}
+                  />
+                  <span>📱 UPI on Delivery</span>
+                </label>
 
-              <label>
-                <input
-                  type="radio"
-                  name="payment"
-                  value="UPI on Delivery"
-                  checked={formData.payment === "UPI on Delivery"}
-                  onChange={handleChange}
-                />
-                UPI on Delivery
-              </label>
-
-              <label>
-                <input
-                  type="radio"
-                  name="payment"
-                  value="Pay via UPI (Scan & Pay)"
-                  checked={formData.payment === "Pay via UPI (Scan & Pay)"}
-                  onChange={handleChange}
-                />
-                Pay via UPI (Scan & Pay)
-              </label>
-
+                <label className={`payment-option-label ${formData.payment === "Pay via UPI (Scan & Pay)" ? "selected" : ""}`}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="Pay via UPI (Scan & Pay)"
+                    checked={formData.payment === "Pay via UPI (Scan & Pay)"}
+                    onChange={handleChange}
+                  />
+                  <span>⚡ Pay via UPI (Scan QR / Instant)</span>
+                </label>
+              </div>
             </div>
 
             {formData.payment === "Pay via UPI (Scan & Pay)" && (
@@ -325,62 +325,60 @@ Packaging Fee : ₹${packagingFee}
               </div>
             )}
           </div>
-<hr />
 
-<h3>Order Summary</h3>
+          <div className="order-summary-card">
+            <h3>Order Summary</h3>
 
-<div className="order-summary">
+            <div className="order-summary">
+              {cartItems.map((item) => (
+                <div className="summary-item" key={item.id}>
+                  <span>
+                    {item.name} × {item.qty}
+                  </span>
+                  <strong>
+                    ₹{item.price * item.qty}
+                  </strong>
+                </div>
+              ))}
 
-  {cartItems.map((item) => (
-    <div className="summary-item" key={item.id}>
-      <span>
-        {item.name} × {item.qty}
-      </span>
+              <hr />
 
-      <span>
-        ₹{item.price * item.qty}
-      </span>
-    </div>
-  ))}
+              <div className="summary-item">
+                <span>Subtotal</span>
+                <strong>₹{subtotal}</strong>
+              </div>
 
-  <hr />
+              <div className="summary-item">
+                <span>Delivery Fee</span>
+                <strong>
+                  {deliveryCharge === 0 ? "FREE" : `₹${deliveryCharge}`}
+                </strong>
+              </div>
 
-  <div className="summary-item">
-    <span>Subtotal</span>
-    <strong>₹{subtotal}</strong>
-  </div>
+              <div className="summary-item">
+                <span>Packaging Fee</span>
+                <strong>₹{packagingFee}</strong>
+              </div>
 
-  <div className="summary-item">
-    <span>Delivery Fee</span>
-    <strong>
-      {deliveryCharge === 0 ? "FREE" : `₹${deliveryCharge}`}
-    </strong>
-  </div>
+              <hr />
 
-  <div className="summary-item">
-    <span>Packaging Fee</span>
-    <strong>₹{packagingFee}</strong>
-  </div>
+              <div className="summary-item total">
+                <span>Total Amount</span>
+                <strong>₹{total}</strong>
+              </div>
+            </div>
+          </div>
 
-  <hr />
-
-  <div className="summary-item total">
-    <span>Total</span>
-    <strong>₹{total}</strong>
-  </div>
-
-</div>
           <button type="submit" className="confirm-btn">
-            Continue
+            Continue to Order
           </button>
 
           <button
             type="button"
-            className="confirm-btn"
-            style={{ marginTop: "10px", background: "#555" }}
+            className="back-btn-checkout"
             onClick={onBack}
           >
-            Back
+            Back to Cart
           </button>
 
         </form>
