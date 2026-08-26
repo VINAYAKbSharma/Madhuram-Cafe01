@@ -367,7 +367,7 @@ function App() {
     setShowFooter(true);
   };
 
-  const handlePlaceOrder = (newOrder, whatsappURL) => {
+  const handlePlaceOrder = async (newOrder, whatsappURL) => {
     const mobile = currentUser?.mobile || newOrder.customer?.mobile;
 
     const orderWithMobile = {
@@ -375,12 +375,23 @@ function App() {
       userMobile: mobile,
     };
 
-    // 1. Send Order to Central Backend Database/API
-    fetch(`${API_BASE_URL}/api/orders`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(orderWithMobile),
-    }).catch((err) => console.warn("Backend sync notice:", err));
+    // 1. Send Order to Central Backend Database/API (await request & use keepalive to prevent mobile OS cancellation)
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderWithMobile),
+        keepalive: true,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        console.log("Order successfully saved to central backend:", data);
+      } else {
+        console.warn("Backend order sync returned status:", res.status);
+      }
+    } catch (err) {
+      console.warn("Backend order sync error:", err);
+    }
 
     // 2. Save to global local list
     let allOrders = [];
@@ -444,7 +455,7 @@ function App() {
     // Reset cart
     setCartItems([]);
 
-    // Open WhatsApp URL
+    // Open WhatsApp URL after network request completes
     window.open(whatsappURL, "_blank");
 
     // Navigate user directly to Orders Section

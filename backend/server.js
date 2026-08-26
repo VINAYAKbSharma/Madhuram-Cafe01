@@ -46,8 +46,8 @@ app.get("*", (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Madhuram Cafe running at http://localhost:${port}`);
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Madhuram Cafe running at http://0.0.0.0:${port}`);
   connectDB().then((dbConnected) => {
     if (!dbConnected) {
       console.warn(
