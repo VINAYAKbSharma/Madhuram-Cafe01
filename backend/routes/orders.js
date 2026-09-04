@@ -199,6 +199,57 @@ router.patch("/:id/status", async (req, res) => {
   }
 });
 
+// DELETE /api/orders/:id - Delete a single order by ID
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Remove from in-memory array & persist to disk
+    const index = inMemoryOrders.findIndex((o) => o.id === id || o.orderId === id);
+    if (index !== -1) {
+      inMemoryOrders.splice(index, 1);
+      saveOrdersToDisk(inMemoryOrders);
+    }
+
+    // 2. Remove from MongoDB if connected
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await Order.deleteOne({ $or: [{ orderId: id }, { id: id }] });
+      } catch (dbErr) {
+        console.warn("MongoDB delete order warning:", dbErr.message);
+      }
+    }
+
+    return res.json({ success: true, message: `Order #${id} deleted successfully` });
+  } catch (err) {
+    console.error("Delete order error:", err);
+    return res.status(500).json({ success: false, message: "Failed to delete order" });
+  }
+});
+
+// DELETE /api/orders - Delete all orders
+router.delete("/", async (req, res) => {
+  try {
+    // 1. Clear in-memory array & save empty list to disk
+    inMemoryOrders.length = 0;
+    saveOrdersToDisk(inMemoryOrders);
+
+    // 2. Clear MongoDB collection if connected
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await Order.deleteMany({});
+      } catch (dbErr) {
+        console.warn("MongoDB clear all orders warning:", dbErr.message);
+      }
+    }
+
+    return res.json({ success: true, message: "All orders deleted successfully" });
+  } catch (err) {
+    console.error("Delete all orders error:", err);
+    return res.status(500).json({ success: false, message: "Failed to delete all orders" });
+  }
+});
+
 // GET /api/orders/user/:mobile - Fetch orders for a specific user
 router.get("/user/:mobile", async (req, res) => {
   try {

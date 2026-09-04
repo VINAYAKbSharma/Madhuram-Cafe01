@@ -10,6 +10,7 @@ import {
   FaSignOutAlt,
   FaArrowLeft,
   FaSearch,
+  FaTrash,
 } from "react-icons/fa";
 import { ADMIN_CREDENTIALS } from "../../config/adminConfig";
 import { API_BASE_URL } from "../../config/api";
@@ -305,6 +306,86 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
     }
   };
 
+  // Delete Single Order
+  const handleDeleteOrder = async (orderId) => {
+    const confirmDelete = window.confirm(`Are you sure you want to delete Order #${orderId}?`);
+    if (!confirmDelete) return;
+
+    try {
+      // 1. Delete from central backend API
+      fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
+        method: "DELETE",
+      }).catch((err) => console.warn("Backend order delete warning:", err));
+
+      // 2. Remove from local storage orders list
+      const rawOrders = localStorage.getItem("madhuram_orders");
+      const allOrders = rawOrders ? JSON.parse(rawOrders) : [];
+      const targetOrder = allOrders.find((o) => o.id === orderId || o.orderId === orderId);
+
+      const updatedAllOrders = allOrders.filter(
+        (o) => o.id !== orderId && o.orderId !== orderId
+      );
+
+      localStorage.setItem("madhuram_orders", JSON.stringify(updatedAllOrders));
+      setOrdersList(updatedAllOrders);
+
+      // 3. Remove from user specific orders list if mobile exists
+      const mobile = targetOrder?.userMobile || targetOrder?.customer?.mobile;
+      if (mobile) {
+        const rawUserOrders = localStorage.getItem(`madhuram_orders_${mobile}`);
+        if (rawUserOrders) {
+          const userOrders = JSON.parse(rawUserOrders);
+          const updatedUserOrders = userOrders.filter(
+            (o) => o.id !== orderId && o.orderId !== orderId
+          );
+          localStorage.setItem(
+            `madhuram_orders_${mobile}`,
+            JSON.stringify(updatedUserOrders)
+          );
+        }
+      }
+
+      if (newOrderAlert?.id === orderId) {
+        setNewOrderAlert(null);
+      }
+
+      onOrdersUpdated && onOrdersUpdated();
+    } catch (err) {
+      console.error("Error deleting order:", err);
+    }
+  };
+
+  // Delete All Orders
+  const handleDeleteAllOrders = async () => {
+    if (ordersList.length === 0) return;
+    const confirmDeleteAll = window.confirm("⚠️ Are you sure you want to DELETE ALL ORDERS? This action cannot be undone!");
+    if (!confirmDeleteAll) return;
+
+    try {
+      // 1. Delete all from central backend API
+      fetch(`${API_BASE_URL}/api/orders`, {
+        method: "DELETE",
+      }).catch((err) => console.warn("Backend clear orders warning:", err));
+
+      // 2. Clear global orders list in localStorage
+      localStorage.removeItem("madhuram_orders");
+      setOrdersList([]);
+
+      // 3. Clear user specific order keys in localStorage
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("madhuram_orders_")) {
+          localStorage.removeItem(key);
+        }
+      }
+
+      setNewOrderAlert(null);
+      onOrdersUpdated && onOrdersUpdated();
+    } catch (err) {
+      console.error("Error deleting all orders:", err);
+    }
+  };
+
   // Calculations
   const totalOrders = ordersList.length;
   const deliveredOrders = ordersList.filter((o) => o.status === "Delivered").length;
@@ -553,28 +634,40 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
           </div>
 
           {activeTab === "dashboard" && (
-            <div className="filter-pills">
-              <button
-                type="button"
-                className={`filter-pill ${orderFilter === "all" ? "active" : ""}`}
-                onClick={() => setOrderFilter("all")}
-              >
-                All Orders ({totalOrders})
-              </button>
-              <button
-                type="button"
-                className={`filter-pill ${orderFilter === "pending" ? "active" : ""}`}
-                onClick={() => setOrderFilter("pending")}
-              >
-                Preparing ({pendingOrders})
-              </button>
-              <button
-                type="button"
-                className={`filter-pill ${orderFilter === "delivered" ? "active" : ""}`}
-                onClick={() => setOrderFilter("delivered")}
-              >
-                Delivered ({deliveredOrders})
-              </button>
+            <div className="filter-pills-container">
+              <div className="filter-pills">
+                <button
+                  type="button"
+                  className={`filter-pill ${orderFilter === "all" ? "active" : ""}`}
+                  onClick={() => setOrderFilter("all")}
+                >
+                  All Orders ({totalOrders})
+                </button>
+                <button
+                  type="button"
+                  className={`filter-pill ${orderFilter === "pending" ? "active" : ""}`}
+                  onClick={() => setOrderFilter("pending")}
+                >
+                  Preparing ({pendingOrders})
+                </button>
+                <button
+                  type="button"
+                  className={`filter-pill ${orderFilter === "delivered" ? "active" : ""}`}
+                  onClick={() => setOrderFilter("delivered")}
+                >
+                  Delivered ({deliveredOrders})
+                </button>
+              </div>
+
+              {totalOrders > 0 && (
+                <button
+                  type="button"
+                  className="delete-all-orders-btn"
+                  onClick={handleDeleteAllOrders}
+                >
+                  <FaTrash /> Delete All Orders
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -715,6 +808,15 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
                               <FaCheckCircle /> Delivery Confirmed
                             </div>
                           )}
+
+                          <button
+                            type="button"
+                            className="delete-single-order-btn"
+                            onClick={() => handleDeleteOrder(order.id)}
+                            title="Delete Order"
+                          >
+                            <FaTrash /> Delete
+                          </button>
                         </div>
                       </div>
                     </div>
