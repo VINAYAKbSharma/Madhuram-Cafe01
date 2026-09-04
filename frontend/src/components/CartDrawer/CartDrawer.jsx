@@ -79,34 +79,34 @@ function CartDrawer({
           )}
         </div>
 
-        <form
-          className="cart-drawer__coupon-box"
-          onSubmit={(e) => {
-            e.preventDefault();
-            onApplyCoupon && onApplyCoupon();
-          }}
-        >
-          <input
-            type="text"
-            placeholder="Coupon Code (e.g. SAME)"
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
-          />
-          <button
-            type="submit"
-            className={couponApplied ? "applied" : ""}
-          >
-            {couponApplied ? "Applied ✓" : "Apply"}
-          </button>
-        </form>
-
-        {couponMessage && (
-          <p className={`coupon-message ${couponApplied ? "success" : "error"}`}>
-            {couponMessage}
-          </p>
-        )}
-
         <div className="cart-drawer__summary">
+          <form
+            className="cart-drawer__coupon-box"
+            onSubmit={(e) => {
+              e.preventDefault();
+              onApplyCoupon && onApplyCoupon();
+            }}
+          >
+            <input
+              type="text"
+              placeholder="Coupon Code (e.g. SAME)"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
+            />
+            <button
+              type="submit"
+              className={couponApplied ? "applied" : ""}
+            >
+              {couponApplied ? "Applied ✓" : "Apply"}
+            </button>
+          </form>
+
+          {couponMessage && (
+            <p className={`coupon-message ${couponApplied ? "success" : "error"}`}>
+              {couponMessage}
+            </p>
+          )}
+
           <div>
             <span>Subtotal</span>
             <b>₹{subtotal}</b>

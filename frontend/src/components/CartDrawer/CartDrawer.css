@@ -116,19 +116,25 @@
 
 .cart-drawer__coupon-box {
   display: flex;
-  gap: 12px;
-  margin-bottom: 18px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .cart-drawer__coupon-box input {
   flex: 1;
-  padding: 12px 16px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
   border-radius: 12px;
   border: 1px solid #333;
-  background: #0f1117;
+  background: #181818;
   color: #fff;
   font-size: 14px;
   outline: none;
+  box-sizing: border-box;
 }
 
 .cart-drawer__coupon-box input:focus {
@@ -136,9 +142,10 @@
 }
 
 .cart-drawer__coupon-box button {
-  border: none;
-  padding: 12px 20px;
+  height: 44px;
+  padding: 0 18px;
   border-radius: 12px;
+  border: none;
   background: #D4A762;
   color: #111;
   cursor: pointer;
@@ -146,6 +153,11 @@
   font-size: 14px;
   transition: all 0.2s ease;
   white-space: nowrap;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .cart-drawer__coupon-box button:hover {
@@ -160,7 +172,7 @@
 
 .coupon-message {
   font-size: 13px;
-  margin: -10px 0 16px 0;
+  margin: -8px 0 14px 0;
   font-weight: 500;
 }
 
