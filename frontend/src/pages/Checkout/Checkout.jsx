@@ -1,6 +1,5 @@
 import { useState } from "react";
 import "./Checkout.css";
-import upiQrImage from "../../assets/upi_qr.jpg";
 
 function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
   const [formData, setFormData] = useState({
@@ -14,12 +13,6 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
     payment: "Cash on Delivery",
   });
 
-  const [transactionId, setTransactionId] = useState("");
-  const [copiedUpi, setCopiedUpi] = useState(false);
-
-  const UPI_ID = "9691634045@ptaxis";
-  const PAYEE_NAME = "Roopendra Singh Parihar";
-
   const MIN_ORDER_AMOUNT = 200;
 
   const subtotal = cartItems.reduce(
@@ -27,10 +20,10 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
     0
   );
 
-  const deliveryCharge = subtotal > 499 ? 0 : 20;
-  const packagingFee = subtotal > 0 ? 10 : 0;
+  const deliveryCharge = subtotal === 0 ? 0 : 20;
+  const platformFee = subtotal > 0 ? 20 : 0;
 
-  const total = subtotal + deliveryCharge + packagingFee;
+  const total = subtotal + deliveryCharge + platformFee;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,16 +32,6 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
       ...prev,
       [name]: value,
     }));
-  };
-
-  const handleCopyUpi = () => {
-    try {
-      navigator.clipboard.writeText(UPI_ID);
-      setCopiedUpi(true);
-      setTimeout(() => setCopiedUpi(false), 2000);
-    } catch {
-      alert(`UPI ID: ${UPI_ID}`);
-    }
   };
 
   const handleSubmit = (e) => {
@@ -65,14 +48,6 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
           `🍽 ${item.name}\nQty: ${item.qty}\nPrice: ₹${item.price * item.qty}`
       )
       .join("\n\n");
-
-    const utrSection = transactionId.trim()
-      ? `\n🔖 *Transaction ID / UTR*: ${transactionId.trim()}`
-      : "";
-
-    const upiNote = formData.payment.includes("UPI")
-      ? `\n\n📌 *Note*: If paid via QR/UPI, please attach your payment screenshot here after sending!`
-      : "";
 
     const message = `
 🍽 *NEW FOOD ORDER*
@@ -99,12 +74,12 @@ ${orderItems}
 --------------------------------
 
 Subtotal : ₹${subtotal}
-Delivery : ${deliveryCharge === 0 ? "FREE" : `₹${deliveryCharge}`}
-Packaging Fee : ₹${packagingFee}
+Delivery : ₹${deliveryCharge}
+Platform Fee : ₹${platformFee}
 
 💰 *Grand Total : ₹${total}*
 
-💳 Payment : ${formData.payment}${utrSection}${upiNote}
+💳 Payment : ${formData.payment}
 `;
 
     const cafeNumber = "919691634045"; // India country code + number
@@ -129,10 +104,9 @@ Packaging Fee : ₹${packagingFee}
       })),
       subtotal,
       deliveryCharge,
-      packagingFee,
+      platformFee,
       total,
       payment: formData.payment,
-      transactionId: transactionId.trim() || null,
       address: `${formData.house}, ${formData.street}, ${formData.landmark ? formData.landmark + ", " : ""}${formData.city} - ${formData.pincode}`,
       customer: {
         fullName: formData.fullName,
@@ -251,7 +225,7 @@ Packaging Fee : ₹${packagingFee}
 
             <div className="payment-options-wrapper">
               <div className="payment-options">
-                <label className={`payment-option-label ${formData.payment === "Cash on Delivery" ? "selected" : ""}`}>
+                <label className="payment-option-label selected">
                   <input
                     type="radio"
                     name="payment"
@@ -261,69 +235,8 @@ Packaging Fee : ₹${packagingFee}
                   />
                   <span>💵 Cash on Delivery</span>
                 </label>
-
-                <label className={`payment-option-label ${formData.payment === "UPI on Delivery" ? "selected" : ""}`}>
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="UPI on Delivery"
-                    checked={formData.payment === "UPI on Delivery"}
-                    onChange={handleChange}
-                  />
-                  <span>📱 UPI on Delivery</span>
-                </label>
-
-                <label className={`payment-option-label ${formData.payment === "Pay via UPI (Scan & Pay)" ? "selected" : ""}`}>
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="Pay via UPI (Scan & Pay)"
-                    checked={formData.payment === "Pay via UPI (Scan & Pay)"}
-                    onChange={handleChange}
-                  />
-                  <span>⚡ Pay via UPI (Scan QR / Instant)</span>
-                </label>
               </div>
             </div>
-
-            {formData.payment === "Pay via UPI (Scan & Pay)" && (
-              <div className="upi-payment-box">
-                <div className="upi-header">
-                  <h4>Scan & Pay with any UPI App</h4>
-                  <p>Payee: <strong>{PAYEE_NAME}</strong></p>
-                </div>
-
-                <div className="upi-qr-container">
-                  <img src={upiQrImage} alt="Madhuram Cafe UPI QR Code" className="upi-qr-img" />
-                </div>
-
-                <div className="upi-id-box">
-                  <span className="upi-id-text">UPI ID: <strong>{UPI_ID}</strong></span>
-                  <button type="button" className="copy-upi-btn" onClick={handleCopyUpi}>
-                    {copiedUpi ? "Copied! ✓" : "Copy"}
-                  </button>
-                </div>
-
-                <div className="upi-app-link">
-                  <a
-                    href={`upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${total}&cu=INR&tn=${encodeURIComponent("Madhuram Cafe Order")}`}
-                    className="upi-app-btn"
-                  >
-                    ⚡ Open UPI App (GPay / PhonePe / Paytm)
-                  </a>
-                </div>
-
-                <div className="form-group transaction-id-group">
-                  <label>UPI Transaction ID / UTR <span className="optional">(Optional)</span></label>
-                  <input
-                    type="text"
-                    placeholder="Enter 12-digit UTR / Ref No. after payment"
-                    value={transactionId}
-                    onChange={(e) => setTransactionId(e.target.value)}
-                  />
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="order-summary-card">
@@ -350,14 +263,12 @@ Packaging Fee : ₹${packagingFee}
 
               <div className="summary-item">
                 <span>Delivery Fee</span>
-                <strong>
-                  {deliveryCharge === 0 ? "FREE" : `₹${deliveryCharge}`}
-                </strong>
+                <strong>₹{deliveryCharge}</strong>
               </div>
 
               <div className="summary-item">
-                <span>Packaging Fee</span>
-                <strong>₹{packagingFee}</strong>
+                <span>Platform Fee</span>
+                <strong>₹{platformFee}</strong>
               </div>
 
               <hr />

@@ -2,120 +2,115 @@ import React from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import "./allfood.css";
 
+const coffee = [
+  { id: "coffee_1", name: "Hot Coffee", price: 30, preparationTime: "5 mins", available: true },
+  { id: "coffee_2", name: "Black Coffee", price: 30, preparationTime: "5 mins", available: true },
+  { id: "coffee_3", name: "Cold Coffee", price: 80, preparationTime: "7 mins", available: true },
+  { id: "coffee_4", name: "Cold Coffee with Icecream", price: 100, preparationTime: "10 mins", available: true },
+];
+
+const shakes = [
+  { id: "shake_1", name: "Classic Vanilla Shake", price: 70, preparationTime: "5 mins", available: true },
+  { id: "shake_2", name: "Strawberry Shake", price: 90, preparationTime: "5 mins", available: true },
+  { id: "shake_3", name: "Butterscotch Shake", price: 90, preparationTime: "5 mins", available: true },
+  { id: "shake_4", name: "Chocolate Shake", price: 80, preparationTime: "5 mins", available: true },
+  { id: "shake_5", name: "Double Chocolate Shake", price: 90, preparationTime: "5 mins", available: true },
+  { id: "shake_6", name: "Oreo Milk Shake", price: 100, preparationTime: "7 mins", available: true },
+  { id: "shake_7", name: "Kitkat Shake", price: 100, preparationTime: "7 mins", available: true },
+];
+
+const mocktails = [
+  { id: "mocktail_1", name: "Blueberry Mojito", price: 90, preparationTime: "5 mins", available: true },
+  { id: "mocktail_2", name: "Mint Mojito", price: 90, preparationTime: "5 mins", available: true },
+  { id: "mocktail_3", name: "Fruit Infusion", price: 90, preparationTime: "5 mins", available: true },
+  { id: "mocktail_4", name: "Strawberry Mojito", price: 90, preparationTime: "5 mins", available: true },
+  { id: "mocktail_5", name: "Watermelon Mojito", price: 90, preparationTime: "5 mins", available: true },
+  { id: "mocktail_6", name: "Kiwi Mojito", price: 90, preparationTime: "5 mins", available: true },
+  { id: "mocktail_7", name: "Blue Moon Drink", price: 90, preparationTime: "5 mins", available: true },
+  { id: "mocktail_8", name: "Litchi Mojito", price: 90, preparationTime: "5 mins", available: true },
+];
+
+const beverages = [
+  { id: "bev_1", name: "Mineral Water Bottle", price: 20, preparationTime: "1 min", available: true },
+  { id: "bev_2", name: "Fresh Lime Soda", price: 30, preparationTime: "3 mins", available: true },
+];
+
+const cornItems = [
+  { id: "corn_1", name: "Smokey Sweet Corn", price: 80, preparationTime: "7 mins", available: true },
+  { id: "corn_2", name: "Sweet Corn Chat", price: 90, preparationTime: "7 mins", available: true },
+  { id: "corn_3", name: "Crispy Corn", price: 110, preparationTime: "10 mins", available: true },
+];
+
+const chinese = [
+  { id: "chinese_1", name: "Fried Rice", price: 90, preparationTime: "12 mins", available: true },
+  { id: "chinese_2", name: "Dry Manchurian", price: 90, preparationTime: "15 mins", available: true },
+  { id: "chinese_3", name: "Veg Hakka Noodles", price: 100, preparationTime: "12 mins", available: true },
+  { id: "chinese_4", name: "Schezwan Rice", price: 100, preparationTime: "12 mins", available: true },
+  { id: "chinese_5", name: "Gravy Manchurian", price: 110, preparationTime: "15 mins", available: true },
+  { id: "chinese_6", name: "Red Sauce Pasta", price: 90, preparationTime: "15 mins", available: true },
+  { id: "chinese_7", name: "White Sauce Pasta", price: 120, preparationTime: "15 mins", available: true },
+  { id: "chinese_8", name: "Schezwan Noodles", price: 110, preparationTime: "12 mins", available: true },
+  { id: "chinese_9", name: "Singapore Noodles", price: 120, preparationTime: "15 mins", available: true },
+  { id: "chinese_10", name: "Chilli Paneer", price: 140, preparationTime: "18 mins", available: true },
+  { id: "chinese_11", name: "Paneer 65", price: 150, preparationTime: "18 mins", available: true },
+];
+
 const burgers = [
-  { id: 1, name: "Aloo Cheese Burger", price: 40, preparationTime: "10 mins", available: true },
-  { id: 2, name: "Veg Cheese Burger", price: 50, preparationTime: "12 mins", available: true },
-  { id: 3, name: "Paneer Burger", price: 60, preparationTime: "8 mins", available: true },
-  { id: 4, name: "Mexican Cheese Burger", price: 60, preparationTime: "8 mins", available: true },
-  { id: 5, name: "Madhuram Special Burger", price: 60, preparationTime: "8 mins", available: true },
-];
-
-const chaap = [
-  { id: 1, name: "Tandoori Chaap", price: 120, preparationTime: "20 mins", available: true },
-  { id: 2, name: "Achari Chaap", price: 130, preparationTime: "20 mins", available: true },
-  { id: 3, name: "Afgani Chaap", price: 130, preparationTime: "22 mins", available: true },
-   { id: 4, name: "Paneer Tikka", price: 130, preparationTime: "22 mins", available: true },
-    { id: 5, name: "Malai Chaap", price: 140, preparationTime: "22 mins", available: true },
-    { id: 6, name: "Mushroom Chaap", price: 140, preparationTime: "20 mins", available: true },
-  { id: 7, name: "Paneer Malai Tikka", price: 150, preparationTime: "20 mins", available: true },
-  { id: 8, name: "Madhuram Special Chaap", price: 160, preparationTime: "22 mins", available: true },
-   { id: 9, name: "Madhuram Special Tikka", price: 160, preparationTime: "22 mins", available: true },
-    
-];
-
-const biryani = [
-  { id: 1, name: "Veg Biryani", price: 120, preparationTime: "20 mins", available: true },
-  { id: 2, name: "Shahi Biryani", price: 150, preparationTime: "22 mins", available: true },
-  { id: 3, name: "Fried Rice", price: 90, preparationTime: "20 mins", available: true },
-  { id: 4, name: "Fried Rice", price: 100, preparationTime: "20 mins", available: true },
+  { id: "burger_1", name: "Aloo Cheese Burger", price: 70, preparationTime: "10 mins", available: true },
+  { id: "burger_2", name: "Veg Cheese Burger", price: 70, preparationTime: "12 mins", available: true },
+  { id: "burger_3", name: "Paneer Cheese Burger", price: 80, preparationTime: "12 mins", available: true },
+  { id: "burger_4", name: "Madhuram Special Burger", price: 100, preparationTime: "15 mins", available: true },
+  { id: "burger_add_1", name: "Mayo Dip (Add On)", price: 15, preparationTime: "1 min", available: true },
+  { id: "burger_add_2", name: "Schezwan Dip (Add On)", price: 15, preparationTime: "1 min", available: true },
+  { id: "burger_add_3", name: "Extra Cheese (Add On)", price: 20, preparationTime: "1 min", available: true },
 ];
 
 const sandwiches = [
-  { id: 1, name: "Veg Sandwich", price: 80, preparationTime: "10 mins", available: true },
-  { id: 2, name: "Veg Cheese Sandwich", price: 90, preparationTime: "12 mins", available: true },
-  { id: 1, name: "Corn Sandwich", price: 90, preparationTime: "10 mins", available: true },
-  { id: 2, name: "Paneer Cheese Sandwich", price: 100, preparationTime: "12 mins", available: true },
-  { id: 1, name: "Madhuram Special Sandwich", price: 120, preparationTime: "10 mins", available: true }
-  
+  { id: "sandwich_1", name: "Veg Sandwich", price: 80, preparationTime: "10 mins", available: true },
+  { id: "sandwich_2", name: "Veg Cheese Sandwich", price: 90, preparationTime: "12 mins", available: true },
+  { id: "sandwich_3", name: "Corn Cheese Sandwich", price: 90, preparationTime: "12 mins", available: true },
+  { id: "sandwich_4", name: "Paneer Cheese Sandwich", price: 100, preparationTime: "12 mins", available: true },
+  { id: "sandwich_5", name: "Madhuram Special Sandwich", price: 120, preparationTime: "15 mins", available: true },
 ];
 
-const pizza = [
-  { id: 1, name: "Margherita", price: 110, preparationTime: "15 mins", available: true },
-  { id: 2, name: "Farmhouse", price: 120, preparationTime: "18 mins", available: true },
-  { id: 3, name: "Paneer Pizza", price: 130, preparationTime: "15 mins", available: true },
-  { id: 4, name: "Corn Mushroom Pizza", price: 130, preparationTime: "18 mins", available: true },
-  { id: 5, name: "Cheese Burst Pizza", price: 150, preparationTime: "15 mins", available: true },
-  { id: 6, name: "Madhuram Special Pizza", price: 120, preparationTime: "18 mins", available: true },
-  { id: 7, name: "Kulhad Pizza", price: 110, preparationTime: "15 mins", available: true },
-  { id: 8, name: "Cheese Kulhad Pizza", price: 120, preparationTime: "18 mins", available: true },
-  { id: 9, name: "Paneer Kulhad Pizza", price: 110, preparationTime: "15 mins", available: true },
-  { id: 210, name: "Madhuram Special Kulhad Pizza", price: 120, preparationTime: "18 mins", available: true }
+const wraps = [
+  { id: "wrap_1", name: "Veg Wrap", price: 80, preparationTime: "10 mins", available: true },
+  { id: "wrap_2", name: "Paneer Wrap", price: 100, preparationTime: "12 mins", available: true },
 ];
 
-const coffee = [
-  { id: 1, name: "Hot Coffee", price: 30, preparationTime: "5 mins", available: true },
-  { id: 2, name: "Black Coffee", price: 30, preparationTime: "7 mins", available: true },
-  { id: 3, name: "Cold Coffee", price: 100, preparationTime: "7 mins", available: true }
+const combos = [
+  { id: "combo_1", name: "Veg Biryani Platter (Veg Biryani + Raita + Salad + Mint Chutni)", price: 120, preparationTime: "20 mins", available: true },
+  { id: "combo_2", name: "Shahi Veg Biryani Platter (Shahi Veg Biryani + Raita + Salad + Mint Chutni)", price: 150, preparationTime: "22 mins", available: true },
+  { id: "combo_3", name: "Fried Rice", price: 90, preparationTime: "12 mins", available: true },
+  { id: "combo_4", name: "Schezwan Rice", price: 100, preparationTime: "12 mins", available: true },
 ];
 
-const drinks = [
-  { id: 1, name: "Classic Vanilla Shake", price: 70, preparationTime: "2 mins", available: true },
-  { id: 2, name: "Strawberry Shake", price: 90, preparationTime: "3 mins", available: true },
-   { id: 3, name: "ButterScotch Shske", price: 90, preparationTime: "2 mins", available: true },
-  { id: 4, name: "Chocolate Shake", price: 80, preparationTime: "3 mins", available: true },
-   { id: 5, name: "Double Chocolate Shake ", price: 90, preparationTime: "2 mins", available: true },
-  { id: 6, name: "Oreo Milk Shake ", price: 100, preparationTime: "3 mins", available: true },
-   { id: 7, name: "KitKat Shake", price: 100, preparationTime: "2 mins", available: true },
-  { id: 8, name: "Dry Fruit & Nut Shake", price: 110, preparationTime: "3 mins", available: true },
-   { id: 9, name: "Blueberry Mojito", price: 90, preparationTime: "2 mins", available: true },
-  { id: 10, name: "Mint Mojito", price: 90, preparationTime: "3 mins", available: true },
-   { id: 11, name: "Fruit Infusion", price: 90, preparationTime: "2 mins", available: true },
-  { id: 12, name: "Strawberry Mojito", price: 90, preparationTime: "3 mins", available: true },
-   { id: 13, name: "Watermelon Mojito", price: 90, preparationTime: "2 mins", available: true },
-  { id: 14, name: "Blue Moon Drink", price: 90, preparationTime: "3 mins", available: true },
-   { id: 15, name: "Litchi Mojito", price: 90, preparationTime: "2 mins", available: true },
-  { id: 16, name: "Kiwi Mojito", price: 90, preparationTime: "3 mins", available: true }
-
+const regularPizza = [
+  { id: "pizza_1", name: "Margherita Pizza", price: 120, preparationTime: "15 mins", available: true },
+  { id: "pizza_2", name: "Farmhouse Pizza", price: 130, preparationTime: "18 mins", available: true },
+  { id: "pizza_3", name: "Paneer Pizza", price: 150, preparationTime: "18 mins", available: true },
+  { id: "pizza_4", name: "Corn Mushroom Pizza", price: 150, preparationTime: "18 mins", available: true },
+  { id: "pizza_5", name: "Cheese Burst Pizza", price: 170, preparationTime: "20 mins", available: true },
+  { id: "pizza_6", name: "Madhuram Special Pizza", price: 180, preparationTime: "20 mins", available: true },
 ];
 
-const Wraps = [
-  { id: 1, name: "veg Wrap", price: 80, preparationTime: "2 mins", available: true },
-  { id: 2, name: "Paneer Wrap", price: 90, preparationTime: "3 mins", available: true },
-    { id: 2, name: "Malai Chaap Wrap", price: 100, preparationTime: "3 mins", available: true }
+const kulhadPizza = [
+  { id: "kpizza_1", name: "Kulhad Pizza", price: 80, preparationTime: "15 mins", available: true },
+  { id: "kpizza_2", name: "Cheese Kulhad Pizza", price: 90, preparationTime: "15 mins", available: true },
+  { id: "kpizza_3", name: "Paneer Cheese Kulhad Pizza", price: 100, preparationTime: "18 mins", available: true },
+  { id: "kpizza_4", name: "Madhuram Special Kulhad Pizza", price: 110, preparationTime: "18 mins", available: true },
 ];
 
-const Desserts = [
-  { id: 1, name: "Rabdi Shahi Tukda ", price: 80, preparationTime: "2 mins", available: true }
-  
-];
-
-const Snacks = [
-  { id: 1, name: "Veg Maggi", price: 40, preparationTime: "2 mins", available: true },
-  { id: 2, name: "Kulhad Maggi", price: 50, preparationTime: "3 mins", available: true },
-   { id: 1, name: "Butter Cheese Maggi", price: 60, preparationTime: "2 mins", available: true },
-  { id: 2, name: "Matchstick Fries", price: 60, preparationTime: "3 mins", available: true },
-   { id: 1, name: "French Fries", price: 60, preparationTime: "2 mins", available: true },
-  { id: 2, name: "Peri Peri French Fries", price: 70, preparationTime: "3 mins", available: true },
-   { id: 1, name: "Masala Fries", price: 80, preparationTime: "2 mins", available: true },
-  { id: 2, name: "Masala Potato Twister", price: 90, preparationTime: "3 mins", available: true },
-   { id: 1, name: "Smokey Sweet Corn", price: 80, preparationTime: "2 mins", available: true },
-  { id: 2, name: "Honey Chilli Potato ", price: 100, preparationTime: "3 mins", available: true },
-   { id: 1, name: "Sweet Corn Chat", price: 90, preparationTime: "2 mins", available: true },
-  { id: 2, name: "Crispy Corn", price: 110, preparationTime: "3 mins", available: true }
-
-];
-
-const Chinese = [
-  { id: 1, name: "Dry Manchurian", price: 80, preparationTime: "2 mins", available: true },
-  { id: 2, name: "Veg Hakka Noodels", price: 90, preparationTime: "3 mins", available: true },
-  { id: 3, name: "Schezwan Rice", price: 90, preparationTime: "2 mins", available: true },
-  { id: 4, name: "Gravy Manchurian", price: 90, preparationTime: " 3 mins", available: true },
-  { id: 5, name: "Red Sauce Pasta", price: 90, preparationTime: "2 mins", available: true },
-  { id: 6, name: "White Shauce Pasta", price: 110, preparationTime: "3 mins", available: true },
-  { id: 7, name: "Schezwan Noodels", price: 110, preparationTime: "2 mins", available: true },
-  { id: 8, name: "Singapore Noodels", price: 110, preparationTime: "3 mins", available: true },
-  { id: 9, name: "Chilli Paneer", price: 140, preparationTime: "2 mins", available: true },
-  { id: 10, name: "Paneer 65", price: 150, preparationTime: "3 mins", available: true }
+const snacks = [
+  { id: "snack_1", name: "Veg Meggi", price: 60, preparationTime: "8 mins", available: true },
+  { id: "snack_2", name: "Kulhad Meggi", price: 70, preparationTime: "10 mins", available: true },
+  { id: "snack_3", name: "Butter Cheese Meggi", price: 80, preparationTime: "10 mins", available: true },
+  { id: "snack_4", name: "French Fries", price: 80, preparationTime: "10 mins", available: true },
+  { id: "snack_5", name: "Peri Peri French Fries", price: 90, preparationTime: "10 mins", available: true },
+  { id: "snack_6", name: "Honey Chilli Potato", price: 120, preparationTime: "15 mins", available: true },
+  { id: "snack_7", name: "Pav Bhaji", price: 100, preparationTime: "15 mins", available: true },
+  { id: "snack_8", name: "Butter Cheese Pav Bhaji", price: 120, preparationTime: "15 mins", available: true },
+  { id: "snack_9", name: "Extra Pav (2 Pcs)", price: 30, preparationTime: "5 mins", available: true },
 ];
 
 function CategorySection({ title, items, onAddToCart }) {
@@ -151,21 +146,24 @@ function CategorySection({ title, items, onAddToCart }) {
 
 export default function AllFood({ selectedCategory, onAddToCart, onClose }) {
   const allSections = {
+    Coffee: coffee,
+    Shakes: shakes,
+    Mocktails: mocktails,
+    Beverages: beverages,
+    "Corn Items": cornItems,
+    Chinese: chinese,
     Burgers: burgers,
     Burger: burgers,
-    Chaap: chaap,
-    Biryani: biryani,
     Sandwich: sandwiches,
     Sandwiches: sandwiches,
-    Pizza: pizza,
-    Coffee: coffee,
-    Drinks: drinks,
-    Drink: drinks,
-    Wraps: Wraps,
-    Desserts: Desserts,
-    Snacks: Snacks,
-    Chinese: Chinese,
-    "Tandoori Grills": chaap,
+    Wraps: wraps,
+    "Afternoon Special & Combos": combos,
+    "Biryani & Combos": combos,
+    Biryani: combos,
+    Pizza: regularPizza,
+    "Regular Pizza": regularPizza,
+    "Kulhad Pizza": kulhadPizza,
+    Snacks: snacks,
   };
 
   const selected = selectedCategory ? allSections[selectedCategory] : null;
@@ -173,7 +171,7 @@ export default function AllFood({ selectedCategory, onAddToCart, onClose }) {
   return (
     <div className="allfood full-screen">
       <div className="allfood-header">
-        <h2>{selectedCategory ? selectedCategory : "All Food"}</h2>
+        <h2>{selectedCategory ? selectedCategory : "All Food & Menu"}</h2>
         <button className="close-allfood" onClick={() => onClose && onClose()}>
           <FaArrowLeft /> Back to Home
         </button>
@@ -183,17 +181,19 @@ export default function AllFood({ selectedCategory, onAddToCart, onClose }) {
         <CategorySection title={selectedCategory} items={selected} onAddToCart={onAddToCart} />
       ) : (
         <>
-          <CategorySection title="Burgers" items={burgers} onAddToCart={onAddToCart} />
-          <CategorySection title="Chaap" items={chaap} onAddToCart={onAddToCart} />
-          <CategorySection title="Biryani" items={biryani} onAddToCart={onAddToCart} />
-          <CategorySection title="Sandwich" items={sandwiches} onAddToCart={onAddToCart} />
-          <CategorySection title="Pizza" items={pizza} onAddToCart={onAddToCart} />
           <CategorySection title="Coffee" items={coffee} onAddToCart={onAddToCart} />
-          <CategorySection title="Drinks" items={drinks} onAddToCart={onAddToCart} />
-          <CategorySection title="Wraps" items={Wraps} onAddToCart={onAddToCart} />
-          <CategorySection title="Desserts" items={Desserts} onAddToCart={onAddToCart} />
-          <CategorySection title="Snacks" items={Snacks} onAddToCart={onAddToCart} />
-          <CategorySection title="Chinese" items={Chinese} onAddToCart={onAddToCart} />
+          <CategorySection title="Shakes" items={shakes} onAddToCart={onAddToCart} />
+          <CategorySection title="Mocktails" items={mocktails} onAddToCart={onAddToCart} />
+          <CategorySection title="Beverages" items={beverages} onAddToCart={onAddToCart} />
+          <CategorySection title="Corn Items" items={cornItems} onAddToCart={onAddToCart} />
+          <CategorySection title="Chinese" items={chinese} onAddToCart={onAddToCart} />
+          <CategorySection title="Burgers & Add Ons" items={burgers} onAddToCart={onAddToCart} />
+          <CategorySection title="Sandwiches" items={sandwiches} onAddToCart={onAddToCart} />
+          <CategorySection title="Wraps" items={wraps} onAddToCart={onAddToCart} />
+          <CategorySection title="Afternoon Special & Delicious Combo" items={combos} onAddToCart={onAddToCart} />
+          <CategorySection title="Regular Pizza" items={regularPizza} onAddToCart={onAddToCart} />
+          <CategorySection title="Kulhad Pizza" items={kulhadPizza} onAddToCart={onAddToCart} />
+          <CategorySection title="Snacks" items={snacks} onAddToCart={onAddToCart} />
         </>
       )}
 
@@ -203,4 +203,3 @@ export default function AllFood({ selectedCategory, onAddToCart, onClose }) {
     </div>
   );
 }
-

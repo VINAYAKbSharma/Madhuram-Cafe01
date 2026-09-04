@@ -19,9 +19,9 @@ function CartDrawer({
   const subtotal = cartItems.reduce((total, item) => total + item.price * item.qty, 0);
   const discount = couponApplied ? Math.round(subtotal * 0.2) : 0;
   const discountedSubtotal = subtotal - discount;
-  const delivery = subtotal === 0 ? 0 : (subtotal > 499 ? 0 : 20);
-  const packagingFee = subtotal > 0 ? 10 : 0;
-  const total = discountedSubtotal + delivery + packagingFee;
+  const delivery = subtotal === 0 ? 0 : 20;
+  const platformFee = subtotal > 0 ? 20 : 0;
+  const total = discountedSubtotal + delivery + platformFee;
   const isMinOrderMet = subtotal >= MIN_ORDER_AMOUNT || subtotal === 0;
   const minOrderDifference = MIN_ORDER_AMOUNT - subtotal;
 
@@ -79,19 +79,32 @@ function CartDrawer({
           )}
         </div>
 
-        <div className="cart-drawer__coupon-box">
+        <form
+          className="cart-drawer__coupon-box"
+          onSubmit={(e) => {
+            e.preventDefault();
+            onApplyCoupon && onApplyCoupon();
+          }}
+        >
           <input
             type="text"
-            placeholder="Coupon Code"
+            placeholder="Coupon Code (e.g. SAME)"
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value)}
           />
-          <button type="button" onClick={onApplyCoupon}>
-            Apply
+          <button
+            type="submit"
+            className={couponApplied ? "applied" : ""}
+          >
+            {couponApplied ? "Applied ✓" : "Apply"}
           </button>
-        </div>
+        </form>
 
-        {couponMessage && <p className="coupon-message">{couponMessage}</p>}
+        {couponMessage && (
+          <p className={`coupon-message ${couponApplied ? "success" : "error"}`}>
+            {couponMessage}
+          </p>
+        )}
 
         <div className="cart-drawer__summary">
           <div>
@@ -106,11 +119,11 @@ function CartDrawer({
           )}
           <div>
             <span>Delivery Fee</span>
-            <b>{delivery === 0 ? "FREE" : `₹${delivery}`}</b>
+            <b>₹{delivery}</b>
           </div>
           <div>
-            <span>Packaging Fee</span>
-            <b>₹{packagingFee}</b>
+            <span>Platform Fee</span>
+            <b>₹{platformFee}</b>
           </div>
           <hr />
           <div className="cart-drawer__grand">

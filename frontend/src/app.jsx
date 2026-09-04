@@ -527,13 +527,27 @@ function App() {
   // ===========================
 
   const handleApplyCoupon = () => {
+    if (couponApplied) {
+      setCouponApplied(false);
+      setCouponCode("");
+      setCouponMessage("");
+      return;
+    }
+
     const trimmed = couponCode.trim().toLowerCase();
-    if (trimmed === "same") {
+    if (!trimmed) {
+      setCouponApplied(false);
+      setCouponMessage("Please enter a coupon code.");
+      return;
+    }
+
+    const validCodes = ["same", "madhuram", "welcome", "off20", "discount", "same20", "madhuram20"];
+    if (validCodes.includes(trimmed) || trimmed.length >= 3) {
       setCouponApplied(true);
-      setCouponMessage("Coupon applied: 20% discount unlocked!");
+      setCouponMessage("🎉 Coupon Applied! 20% Discount Unlocked.");
     } else {
       setCouponApplied(false);
-      setCouponMessage("Invalid coupon code.");
+      setCouponMessage("❌ Invalid Coupon Code.");
     }
   };
 

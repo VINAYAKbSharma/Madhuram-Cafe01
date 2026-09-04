@@ -116,9 +116,14 @@
   background: #ff6b00;
   color: #fff;
   border: none;
-  padding: 8px 10px;
-  border-radius: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
 }
 
 .add-cart:disabled {

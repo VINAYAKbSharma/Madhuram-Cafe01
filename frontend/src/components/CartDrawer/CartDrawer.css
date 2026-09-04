@@ -117,25 +117,59 @@
 .cart-drawer__coupon-box {
   display: flex;
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 
 .cart-drawer__coupon-box input {
   flex: 1;
-  padding: 14px 16px;
+  padding: 12px 16px;
   border-radius: 12px;
   border: 1px solid #333;
   background: #0f1117;
   color: #fff;
+  font-size: 14px;
+  outline: none;
+}
+
+.cart-drawer__coupon-box input:focus {
+  border-color: #D4A762;
 }
 
 .cart-drawer__coupon-box button {
   border: none;
-  padding: 14px 20px;
+  padding: 12px 20px;
   border-radius: 12px;
   background: #D4A762;
   color: #111;
   cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.cart-drawer__coupon-box button:hover {
+  background: #e5b873;
+  transform: translateY(-1px);
+}
+
+.cart-drawer__coupon-box button.applied {
+  background: #22c55e;
+  color: #ffffff;
+}
+
+.coupon-message {
+  font-size: 13px;
+  margin: -10px 0 16px 0;
+  font-weight: 500;
+}
+
+.coupon-message.success {
+  color: #4ade80;
+}
+
+.coupon-message.error {
+  color: #f87171;
 }
 
 .cart-drawer__summary {

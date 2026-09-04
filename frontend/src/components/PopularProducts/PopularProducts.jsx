@@ -1,3 +1,4 @@
+import { useState } from "react";
 import "./PopularProducts.css";
 import products from "./ProductData";
 
@@ -9,6 +10,15 @@ import {
 } from "react-icons/fa";
 
 function PopularProducts({ onAddToCart }) {
+  const [likedItems, setLikedItems] = useState({});
+
+  const toggleLike = (id) => {
+    setLikedItems((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
   return (
     <section id="offers" className="popular">
 
@@ -19,8 +29,6 @@ function PopularProducts({ onAddToCart }) {
           <h2>Popular Dishes</h2>
         </div>
 
-        
-
       </div>
 
       <div className="product-grid">
@@ -28,10 +36,14 @@ function PopularProducts({ onAddToCart }) {
         {products.map((item) => (
 
           <div className="product-card" key={item.id}>
-<span className="product-offer">{item.offer}</span>
-         
+            <span className="product-offer">{item.offer}</span>
 
-            <button className="wishlist">
+            <button
+              type="button"
+              className={`wishlist ${likedItems[item.id] ? "liked" : ""}`}
+              onClick={() => toggleLike(item.id)}
+              aria-label="Like product"
+            >
               <FaHeart />
             </button>
 

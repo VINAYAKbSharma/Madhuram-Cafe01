@@ -118,6 +118,9 @@ body {
   font-size: 18px;
 
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   transition: .3s;
 }

@@ -2,63 +2,62 @@ import coffee from "../../assets/products/coffee1.jpg";
 import burger from "../../assets/products/burger1.jpg";
 import pizza from "../../assets/products/pizza1.jpg";
 import pasta from "../../assets/products/pasta1.jpg";
-import brownie from "../../assets/products/brownie1.jpg";
 import sandwich from "../../assets/products/sandwich1.jpg";
 
 const products = [
   {
-    id: 1,
+    id: "coffee_3",
     name: "Cold Coffee",
     image: coffee,
-    price: 100,
+    price: 80,
     rating: 4.9,
-    time: "15 min",
-    offer: "20% OFF"
+    time: "7 min",
+    offer: "POPULAR"
   },
   {
-    id: 2,
-    name: "Cheese Burger",
+    id: "burger_1",
+    name: "Aloo Cheese Burger",
     image: burger,
-    price: 60,
+    price: 70,
     rating: 4.8,
-    time: "20 min",
-    offer: "15% OFF"
+    time: "10 min",
+    offer: "BESTSELLER"
   },
   {
-    id: 3,
+    id: "pizza_1",
     name: "Margherita Pizza",
     image: pizza,
-    price: 110,
+    price: 120,
     rating: 4.9,
-    time: "25 min",
-    offer: "25% OFF"
+    time: "15 min",
+    offer: "SPECIAL"
   },
   {
-    id: 4,
+    id: "chinese_7",
     name: "White Sauce Pasta",
     image: pasta,
-    price: 110,
+    price: 120,
     rating: 4.7,
-    time: "18 min",
-    offer: "10% OFF"
+    time: "15 min",
+    offer: "MUST TRY"
   },
   {
-    id: 5,
-    name: "Shahi Rabdi ",
-    image: brownie,
-    price: 110,
-    rating: 4.9,
-    time: "12 min",
-    offer: "NEW"
-  },
-  {
-    id: 6,
+    id: "sandwich_5",
     name: "Madhuram Special Sandwich",
     image: sandwich,
-    price: 110,
-    rating: 4.8,
+    price: 120,
+    rating: 4.9,
     time: "15 min",
     offer: "BEST SELLER"
+  },
+  {
+    id: "burger_4",
+    name: "Madhuram Special Burger",
+    image: burger,
+    price: 100,
+    rating: 4.8,
+    time: "15 min",
+    offer: "CHEF SPECIAL"
   }
 ];
 

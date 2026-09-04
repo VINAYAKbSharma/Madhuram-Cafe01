@@ -1,8 +1,7 @@
 import "./OfferBanner.css";
 import {
   FaMotorcycle,
-  FaGift,
-  FaArrowRight
+  FaGift
 } from "react-icons/fa";
 
 function OfferBanner() {
@@ -38,15 +37,7 @@ function OfferBanner() {
         </h3>
 
         <div className="coupon">
-
-          Coupon Code
-
-          <strong>
-
-            
-
-          </strong>
-
+          Coupon Code: <strong>SAME</strong>
         </div>
 
         <div className="offer-features">
@@ -78,8 +69,6 @@ function OfferBanner() {
           <button>
 
             Order Now
-
-            <FaArrowRight />
 
           </button>
 
