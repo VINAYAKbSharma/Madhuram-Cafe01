@@ -1,61 +1,59 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import "./SplashScreen.css";
 
 import splash from "../../assets/splash/d4988b17-9ac3-4642-88ee-85913e4bbc81.png";
+import splashSound from "../../assets/splash/WhatsApp Audio 2026-08-01 at 9.00.38 PM.mpeg";
 
 function SplashScreen({ onFinish }) {
+  const audioRef = useRef(null);
 
-    useEffect(() => {
+  useEffect(() => {
+    const audio = new Audio(splashSound);
+    audioRef.current = audio;
+    audio.volume = 1.0;
+    audio.preload = "auto";
 
-        // Play splash audio (uses Vite-compatible URL constructor)
-        let splashAudio;
-        try {
-            const audioUrl = new URL(
-                "../../assets/splash/WhatsApp Audio 2026-08-01 at 9.00.38 PM.mpeg",
-                import.meta.url
-            );
-            splashAudio = new Audio(audioUrl);
-            // best-effort play; browsers may block autoplay without user gesture
-            splashAudio.volume = 0.9;
-            const playPromise = splashAudio.play();
-            if (playPromise && typeof playPromise.catch === "function") {
-                playPromise.catch(() => {
-                    // ignore play errors (autoplay restrictions)
-                });
-            }
-        } catch (e) {
-            // ignore if file not found or URL construction fails
-        }
+    // Play splash audio automatically
+    const playAudio = () => {
+      if (audioRef.current) {
+        audioRef.current.play().catch((err) => {
+          console.warn("Autoplay blocked by browser, awaiting interaction:", err);
+        });
+      }
+    };
 
-        const timer = setTimeout(() => {
-            onFinish();
-        }, 3000);
+    playAudio();
 
-        return () => {
-            clearTimeout(timer);
-            if (splashAudio) {
-                splashAudio.pause();
-                splashAudio.currentTime = 0;
-                splashAudio.src = "";
-            }
-        };
+    // Fallback: unlock audio on first touch/click if browser blocked autoplay
+    const unlockAudio = () => {
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().catch(() => {});
+      }
+    };
 
-    }, [onFinish]);
+    window.addEventListener("touchstart", unlockAudio, { once: true });
+    window.addEventListener("click", unlockAudio, { once: true });
 
-    return (
+    const timer = setTimeout(() => {
+      onFinish();
+    }, 3200);
 
-        <div className="splash">
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("touchstart", unlockAudio);
+      window.removeEventListener("click", unlockAudio);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    };
+  }, [onFinish]);
 
-            <picture>
-                <source media="(max-width: 768px)" srcSet={splash} />
-                <source media="(max-width: 1200px)" srcSet={splash} />
-                <img src={splash} alt="Splash" />
-            </picture>
-
-        </div>
-
-    );
-
+  return (
+    <div className="splash">
+      <img src={splash} alt="Madhuram Cafe Splash Screen" className="splash-img" />
+    </div>
+  );
 }
 
 export default SplashScreen;

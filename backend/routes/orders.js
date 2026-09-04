@@ -203,31 +203,44 @@ router.patch("/:id/status", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    const targetIdStr = String(id).trim();
 
     // 1. Remove from in-memory array & persist to disk
-    const index = inMemoryOrders.findIndex((o) => o.id === id || o.orderId === id);
-    if (index !== -1) {
-      inMemoryOrders.splice(index, 1);
-      saveOrdersToDisk(inMemoryOrders);
+    for (let i = inMemoryOrders.length - 1; i >= 0; i--) {
+      const item = inMemoryOrders[i];
+      if (
+        String(item.id) === targetIdStr ||
+        String(item.orderId) === targetIdStr
+      ) {
+        inMemoryOrders.splice(i, 1);
+      }
     }
+    saveOrdersToDisk(inMemoryOrders);
 
     // 2. Remove from MongoDB if connected
     if (mongoose.connection.readyState === 1) {
       try {
-        await Order.deleteOne({ $or: [{ orderId: id }, { id: id }] });
+        await Order.deleteMany({
+          $or: [
+            { orderId: targetIdStr },
+            { id: targetIdStr },
+            { orderId: isNaN(targetIdStr) ? -1 : Number(targetIdStr) },
+            { id: isNaN(targetIdStr) ? -1 : Number(targetIdStr) },
+          ],
+        });
       } catch (dbErr) {
         console.warn("MongoDB delete order warning:", dbErr.message);
       }
     }
 
-    return res.json({ success: true, message: `Order #${id} deleted successfully` });
+    return res.json({ success: true, message: `Order #${id} deleted permanently` });
   } catch (err) {
     console.error("Delete order error:", err);
     return res.status(500).json({ success: false, message: "Failed to delete order" });
   }
 });
 
-// DELETE /api/orders - Delete all orders
+// DELETE /api/orders - Delete all orders permanently
 router.delete("/", async (req, res) => {
   try {
     // 1. Clear in-memory array & save empty list to disk
@@ -243,7 +256,7 @@ router.delete("/", async (req, res) => {
       }
     }
 
-    return res.json({ success: true, message: "All orders deleted successfully" });
+    return res.json({ success: true, message: "All orders permanently deleted" });
   } catch (err) {
     console.error("Delete all orders error:", err);
     return res.status(500).json({ success: false, message: "Failed to delete all orders" });

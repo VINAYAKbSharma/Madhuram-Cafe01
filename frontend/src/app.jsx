@@ -20,6 +20,35 @@ import Profile from "./pages/Profile/Profile";
 import AdminPanel from "./pages/Admin/AdminPanel";
 import { API_BASE_URL } from "./config/api";
 
+const filterDeletedOrders = (orders) => {
+  if (!Array.isArray(orders)) return [];
+
+  if (localStorage.getItem("madhuram_all_orders_deleted") === "true") {
+    const deletedTimestamp = Number(localStorage.getItem("madhuram_all_deleted_timestamp") || 0);
+    return orders.filter((o) => {
+      const orderTime = Number(o.createdAtTimestamp || o.timestamp || o.id || 0);
+      return orderTime > deletedTimestamp;
+    });
+  }
+
+  let deletedIds = new Set();
+  try {
+    const rawIds = localStorage.getItem("madhuram_deleted_order_ids");
+    if (rawIds) {
+      const parsed = JSON.parse(rawIds);
+      if (Array.isArray(parsed)) {
+        deletedIds = new Set(parsed.map(String));
+      }
+    }
+  } catch {}
+
+  if (deletedIds.size === 0) return orders;
+
+  return orders.filter(
+    (o) => !deletedIds.has(String(o.id)) && !deletedIds.has(String(o.orderId))
+  );
+};
+
 const getOrdersForUser = (user) => {
   try {
     const allOrdersRaw = localStorage.getItem("madhuram_orders");
@@ -38,12 +67,13 @@ const getOrdersForUser = (user) => {
 
     const map = new Map();
     [...userSpecific, ...filteredFromAll].forEach((order) => {
-      if (order && order.id) {
-        map.set(order.id, order);
+      if (order && (order.id || order.orderId)) {
+        map.set(order.id || order.orderId, order);
       }
     });
 
-    return Array.from(map.values());
+    const merged = Array.from(map.values());
+    return filterDeletedOrders(merged);
   } catch (e) {
     console.error("Error loading user orders:", e);
     return [];
@@ -104,7 +134,7 @@ function App() {
         if (res.ok) {
           const data = await res.json();
           if (data.success && Array.isArray(data.orders)) {
-            setOrders(data.orders);
+            setOrders(filterDeletedOrders(data.orders));
           }
         }
       } catch (err) {}
@@ -373,6 +403,10 @@ function App() {
   };
 
   const handlePlaceOrder = async (newOrder, whatsappURL) => {
+    try {
+      localStorage.setItem("madhuram_all_orders_deleted", "false");
+    } catch {}
+
     const mobile = currentUser?.mobile || newOrder.customer?.mobile;
 
     const orderWithMobile = {

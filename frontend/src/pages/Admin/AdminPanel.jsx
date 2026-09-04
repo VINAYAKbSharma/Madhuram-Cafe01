@@ -16,6 +16,35 @@ import { ADMIN_CREDENTIALS } from "../../config/adminConfig";
 import { API_BASE_URL } from "../../config/api";
 import "./AdminPanel.css";
 
+const filterDeletedOrders = (orders) => {
+  if (!Array.isArray(orders)) return [];
+
+  if (localStorage.getItem("madhuram_all_orders_deleted") === "true") {
+    const deletedTimestamp = Number(localStorage.getItem("madhuram_all_deleted_timestamp") || 0);
+    return orders.filter((o) => {
+      const orderTime = Number(o.createdAtTimestamp || o.timestamp || o.id || 0);
+      return orderTime > deletedTimestamp;
+    });
+  }
+
+  let deletedIds = new Set();
+  try {
+    const rawIds = localStorage.getItem("madhuram_deleted_order_ids");
+    if (rawIds) {
+      const parsed = JSON.parse(rawIds);
+      if (Array.isArray(parsed)) {
+        deletedIds = new Set(parsed.map(String));
+      }
+    }
+  } catch {}
+
+  if (deletedIds.size === 0) return orders;
+
+  return orders.filter(
+    (o) => !deletedIds.has(String(o.id)) && !deletedIds.has(String(o.orderId))
+  );
+};
+
 function AdminPanel({ onBackHome, onOrdersUpdated }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return sessionStorage.getItem("madhuram_admin_session") === "true";
@@ -34,24 +63,27 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
 
   // Load data from central API & localStorage fallback
   const loadData = async () => {
+    let apiSuccess = false;
     try {
       const res = await fetch(`${API_BASE_URL}/api/orders`);
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.orders)) {
-          setOrdersList(data.orders);
+          apiSuccess = true;
+          const validOrders = filterDeletedOrders(data.orders);
+          setOrdersList(validOrders);
           try {
-            localStorage.setItem("madhuram_orders", JSON.stringify(data.orders));
+            localStorage.setItem("madhuram_orders", JSON.stringify(validOrders));
           } catch {}
         }
-      } else {
-        const rawOrders = localStorage.getItem("madhuram_orders");
-        setOrdersList(rawOrders ? JSON.parse(rawOrders) : []);
       }
-    } catch {
+    } catch {}
+
+    if (!apiSuccess) {
       try {
         const rawOrders = localStorage.getItem("madhuram_orders");
-        setOrdersList(rawOrders ? JSON.parse(rawOrders) : []);
+        const parsed = rawOrders ? JSON.parse(rawOrders) : [];
+        setOrdersList(filterDeletedOrders(parsed));
       } catch {
         setOrdersList([]);
       }
@@ -96,20 +128,21 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
 
     const checkNewOrders = async () => {
       try {
-        let currentOrders = [];
+        let currentOrders = null;
         try {
           const res = await fetch(`${API_BASE_URL}/api/orders`);
           if (res.ok) {
             const data = await res.json();
             if (data.success && Array.isArray(data.orders)) {
-              currentOrders = data.orders;
+              currentOrders = filterDeletedOrders(data.orders);
             }
           }
         } catch {}
 
-        if (currentOrders.length === 0) {
+        if (currentOrders === null) {
           const rawOrders = localStorage.getItem("madhuram_orders");
-          currentOrders = rawOrders ? JSON.parse(rawOrders) : [];
+          const parsed = rawOrders ? JSON.parse(rawOrders) : [];
+          currentOrders = filterDeletedOrders(parsed);
         }
 
         setOrdersList((prevList) => {
@@ -118,7 +151,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
 
           if (currentOrders.length > prevList.length || currentPending > prevPending) {
             const latestPending = currentOrders.find((o) => o.status === "Pending");
-            if (latestPending && latestPending.id !== newOrderAlert?.id) {
+            if (latestPending && String(latestPending.id) !== String(newOrderAlert?.id)) {
               setNewOrderAlert(latestPending);
             }
           }
@@ -311,19 +344,23 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
     const confirmDelete = window.confirm(`Are you sure you want to delete Order #${orderId}?`);
     if (!confirmDelete) return;
 
+    const orderIdStr = String(orderId).trim();
+
     try {
       // 1. Delete from central backend API
-      fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
+      await fetch(`${API_BASE_URL}/api/orders/${orderIdStr}`, {
         method: "DELETE",
       }).catch((err) => console.warn("Backend order delete warning:", err));
 
       // 2. Remove from local storage orders list
       const rawOrders = localStorage.getItem("madhuram_orders");
       const allOrders = rawOrders ? JSON.parse(rawOrders) : [];
-      const targetOrder = allOrders.find((o) => o.id === orderId || o.orderId === orderId);
+      const targetOrder = allOrders.find(
+        (o) => String(o.id) === orderIdStr || String(o.orderId) === orderIdStr
+      );
 
       const updatedAllOrders = allOrders.filter(
-        (o) => o.id !== orderId && o.orderId !== orderId
+        (o) => String(o.id) !== orderIdStr && String(o.orderId) !== orderIdStr
       );
 
       localStorage.setItem("madhuram_orders", JSON.stringify(updatedAllOrders));
@@ -336,7 +373,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
         if (rawUserOrders) {
           const userOrders = JSON.parse(rawUserOrders);
           const updatedUserOrders = userOrders.filter(
-            (o) => o.id !== orderId && o.orderId !== orderId
+            (o) => String(o.id) !== orderIdStr && String(o.orderId) !== orderIdStr
           );
           localStorage.setItem(
             `madhuram_orders_${mobile}`,
@@ -345,7 +382,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
         }
       }
 
-      if (newOrderAlert?.id === orderId) {
+      if (newOrderAlert && (String(newOrderAlert.id) === orderIdStr || String(newOrderAlert.orderId) === orderIdStr)) {
         setNewOrderAlert(null);
       }
 
@@ -363,21 +400,23 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
 
     try {
       // 1. Delete all from central backend API
-      fetch(`${API_BASE_URL}/api/orders`, {
+      await fetch(`${API_BASE_URL}/api/orders`, {
         method: "DELETE",
       }).catch((err) => console.warn("Backend clear orders warning:", err));
 
       // 2. Clear global orders list in localStorage
-      localStorage.removeItem("madhuram_orders");
+      localStorage.setItem("madhuram_orders", JSON.stringify([]));
       setOrdersList([]);
 
       // 3. Clear user specific order keys in localStorage
+      const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key && key.startsWith("madhuram_orders_")) {
-          localStorage.removeItem(key);
+          keysToRemove.push(key);
         }
       }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
 
       setNewOrderAlert(null);
       onOrdersUpdated && onOrdersUpdated();
