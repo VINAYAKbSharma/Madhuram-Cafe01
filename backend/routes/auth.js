@@ -155,11 +155,54 @@ router.post("/login", async (req, res) => {
         id: user._id || user.id,
         mobile: user.mobile,
         fullName: user.fullName,
+        email: user.email,
+        address: user.address || {},
       },
     });
   } catch (err) {
     console.error("Login error:", err);
     return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// PUT /api/auth/user/:mobile — Update user profile & saved delivery address
+router.put("/user/:mobile", async (req, res) => {
+  try {
+    const { mobile } = req.params;
+    const { fullName, email, address } = req.body;
+
+    const memUser = inMemoryUsers.find((u) => u.mobile === mobile);
+    if (memUser) {
+      if (fullName !== undefined) memUser.fullName = fullName;
+      if (email !== undefined) memUser.email = email;
+      if (address !== undefined) memUser.address = address;
+      saveUsersToDisk(inMemoryUsers);
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await User.findOneAndUpdate(
+          { mobile },
+          { $set: { fullName, email, address } },
+          { new: true }
+        );
+      } catch (dbErr) {
+        console.warn("MongoDB update user warning:", dbErr.message);
+      }
+    }
+
+    const updatedUser = {
+      id: memUser?._id || memUser?.id || Date.now().toString(),
+      mobile,
+      fullName: fullName !== undefined ? fullName : memUser?.fullName,
+      email: email !== undefined ? email : memUser?.email,
+      address: address !== undefined ? address : memUser?.address || {},
+    };
+
+    return res.json({ success: true, message: "Profile updated successfully", user: updatedUser });
+  } catch (err) {
+    console.error("Update profile error:", err);
+    return res.status(500).json({ success: false, message: "Failed to update profile" });
   }
 });
 
@@ -170,7 +213,7 @@ router.get("/users", async (req, res) => {
     if (mongoose.connection.readyState === 1) {
       try {
         const docs = await User.find({})
-          .select("fullName mobile email createdAt")
+          .select("fullName mobile email address createdAt")
           .sort({ createdAt: -1 });
         dbUsers = docs.map((doc) => (doc.toObject ? doc.toObject() : doc));
       } catch (dbErr) {
@@ -185,6 +228,7 @@ router.get("/users", async (req, res) => {
           fullName: u.fullName,
           mobile: u.mobile,
           email: u.email,
+          address: u.address || {},
           createdAt: u.createdAt,
         });
       }

@@ -4,17 +4,22 @@ import { API_BASE_URL } from "../../config/api";
 import { loadRazorpayScript } from "../../utils/loadRazorpay";
 
 function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
+  const savedAddr = currentUser?.address || {};
+
   const [formData, setFormData] = useState({
     fullName: currentUser?.fullName || "",
     mobile: currentUser?.mobile || "",
-    house: "",
-    street: "",
-    landmark: "",
-    city: "",
-    pincode: "",
+    house: savedAddr.house || "",
+    street: savedAddr.street || "",
+    landmark: savedAddr.landmark || "",
+    city: savedAddr.city || "",
+    pincode: savedAddr.pincode || "",
     payment: "Razorpay Gateway",
   });
 
+  const [isEditingAddress, setIsEditingAddress] = useState(
+    !savedAddr.house && !savedAddr.street
+  );
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const MIN_ORDER_AMOUNT = 200;
@@ -36,6 +41,16 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
     }));
   };
 
+  const formattedAddressText = [
+    formData.house,
+    formData.street,
+    formData.landmark ? `(Near ${formData.landmark})` : "",
+    formData.city,
+    formData.pincode,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -45,6 +60,12 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
           MIN_ORDER_AMOUNT - subtotal
         } more worth of items.`
       );
+      return;
+    }
+
+    if (!formData.fullName || !formData.mobile || (!formData.house && !formData.street)) {
+      alert("Please provide your delivery address details before proceeding.");
+      setIsEditingAddress(true);
       return;
     }
 
@@ -178,9 +199,7 @@ Platform Fee : ₹${platformFee}
             deliveryCharge,
             platformFee,
             total,
-            address: `${formData.house}, ${formData.street}, ${
-              formData.landmark ? formData.landmark + ", " : ""
-            }${formData.city} - ${formData.pincode}`,
+            address: formattedAddressText,
             customer: {
               fullName: formData.fullName,
               mobile: formData.mobile,
@@ -246,90 +265,104 @@ Platform Fee : ₹${platformFee}
     <div className="checkout-page">
       <div className="checkout-card">
         <h2>Checkout</h2>
-        <p>Please enter your delivery details</p>
+        <p>Review delivery address and complete payment</p>
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Full Name</label>
-            <input
-              type="text"
-              name="fullName"
-              placeholder="Enter your full name"
-              value={formData.fullName}
-              onChange={handleChange}
-              required
-            />
-          </div>
+          {/* Customer Summary & Delivery Address Card */}
+          <div className="delivery-address-card" style={{ background: "#f8fafc", border: "2px solid #e2e8f0", borderRadius: "12px", padding: "16px", marginBottom: "20px", textAlign: "left" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+              <h3 style={{ margin: 0, fontSize: "16px", color: "#1e293b" }}>
+                📍 Delivery Address
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsEditingAddress(!isEditingAddress)}
+                style={{
+                  background: "transparent",
+                  color: "#e63946",
+                  border: "1px solid #e63946",
+                  padding: "4px 10px",
+                  borderRadius: "6px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                }}
+              >
+                {isEditingAddress ? "Done" : "✏️ Change Address"}
+              </button>
+            </div>
 
-          <div className="form-group">
-            <label>Mobile Number</label>
-            <input
-              type="tel"
-              name="mobile"
-              placeholder="Enter mobile number"
-              value={formData.mobile}
-              onChange={handleChange}
-              required
-            />
-          </div>
+            <div style={{ fontSize: "14px", color: "#475569", lineHeight: "1.6" }}>
+              <p style={{ margin: "0 0 4px 0", fontWeight: "700", color: "#0f172a" }}>
+                👤 {formData.fullName || "Valued Customer"} ({formData.mobile})
+              </p>
+              {!isEditingAddress ? (
+                <p style={{ margin: 0, color: "#334155" }}>
+                  {formattedAddressText || "No saved address. Please click 'Change Address' to enter address."}
+                </p>
+              ) : null}
+            </div>
 
-          <div className="form-group">
-            <label>House / Flat No.</label>
-            <input
-              type="text"
-              name="house"
-              placeholder="House / Flat No."
-              value={formData.house}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Street / Area</label>
-            <input
-              type="text"
-              name="street"
-              placeholder="Street / Area"
-              value={formData.street}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Landmark</label>
-            <input
-              type="text"
-              name="landmark"
-              placeholder="Nearby Landmark"
-              value={formData.landmark}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>City</label>
-            <input
-              type="text"
-              name="city"
-              placeholder="City"
-              value={formData.city}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Pincode</label>
-            <input
-              type="text"
-              name="pincode"
-              placeholder="Pincode"
-              value={formData.pincode}
-              onChange={handleChange}
-              required
-            />
+            {isEditingAddress && (
+              <div style={{ marginTop: "12px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <input
+                  type="text"
+                  name="fullName"
+                  placeholder="Full Name"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  required
+                />
+                <input
+                  type="tel"
+                  name="mobile"
+                  placeholder="Mobile Number"
+                  value={formData.mobile}
+                  onChange={handleChange}
+                  required
+                />
+                <input
+                  type="text"
+                  name="house"
+                  placeholder="House / Flat No."
+                  value={formData.house}
+                  onChange={handleChange}
+                  required
+                />
+                <input
+                  type="text"
+                  name="street"
+                  placeholder="Street / Area"
+                  value={formData.street}
+                  onChange={handleChange}
+                  required
+                />
+                <input
+                  type="text"
+                  name="landmark"
+                  placeholder="Nearby Landmark"
+                  value={formData.landmark}
+                  onChange={handleChange}
+                />
+                <input
+                  type="text"
+                  name="city"
+                  placeholder="City"
+                  value={formData.city}
+                  onChange={handleChange}
+                  required
+                />
+                <input
+                  type="text"
+                  name="pincode"
+                  placeholder="Pincode"
+                  value={formData.pincode}
+                  onChange={handleChange}
+                  required
+                  style={{ gridColumn: "span 2" }}
+                />
+              </div>
+            )}
           </div>
 
           <div className="form-group">

@@ -251,6 +251,15 @@ function App() {
       setShowAllFood(false);
       setActiveTab("orders");
       setShowFooter(true);
+    } else if (pendingTarget === "checkout") {
+      setPendingTarget(null);
+      setShowCheckout(true);
+      setShowOrders(false);
+      setShowAdmin(false);
+      setShowProfile(false);
+      setShowBookTable(false);
+      setShowAllFood(false);
+      setShowFooter(false);
     } else {
       setShowProfile(true);
       setShowAdmin(false);
@@ -278,6 +287,15 @@ function App() {
       setShowAllFood(false);
       setActiveTab("orders");
       setShowFooter(true);
+    } else if (pendingTarget === "checkout") {
+      setPendingTarget(null);
+      setShowCheckout(true);
+      setShowOrders(false);
+      setShowAdmin(false);
+      setShowProfile(false);
+      setShowBookTable(false);
+      setShowAllFood(false);
+      setShowFooter(false);
     } else {
       setShowProfile(true);
       setShowAdmin(false);
@@ -388,6 +406,12 @@ function App() {
   // ===========================
 
   const handleCheckout = () => {
+    if (!currentUser) {
+      setPendingTarget("checkout");
+      alert("Please login or register to proceed to checkout!");
+      openLogin();
+      return;
+    }
     setIsCartOpen(false);
     setShowProfile(false);
     setShowBookTable(false);
@@ -724,6 +748,14 @@ function App() {
             <Profile
               user={currentUser}
               onLogout={handleLogout}
+              onUpdateUser={(updatedUser) => {
+                setCurrentUser(updatedUser);
+                try {
+                  localStorage.setItem("madhuram_user", JSON.stringify(updatedUser));
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
               onBackHome={() => {
                 setShowProfile(false);
                 setActiveTab("home");

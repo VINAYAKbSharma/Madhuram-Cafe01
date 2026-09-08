@@ -8,6 +8,11 @@ function Register({ onClose, onLogin, onRegisterSuccess }) {
     mobile: "",
     email: "",
     password: "",
+    house: "",
+    street: "",
+    landmark: "",
+    city: "",
+    pincode: "",
   });
 
   const handleChange = (e) => {
@@ -20,10 +25,28 @@ function Register({ onClose, onLogin, onRegisterSuccess }) {
       alert("Mobile number and password are required.");
       return;
     }
+
+    const addressObj = {
+      house: formData.house,
+      street: formData.street,
+      landmark: formData.landmark,
+      city: formData.city,
+      pincode: formData.pincode,
+    };
+
     const userObj = {
       fullName: formData.fullName || "Valued Customer",
       mobile: formData.mobile,
       email: formData.email,
+      address: addressObj,
+    };
+
+    const payload = {
+      fullName: formData.fullName,
+      mobile: formData.mobile,
+      email: formData.email,
+      password: formData.password,
+      address: addressObj,
     };
 
     // Save to local accounts store
@@ -42,7 +65,7 @@ function Register({ onClose, onLogin, onRegisterSuccess }) {
       const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -57,7 +80,6 @@ function Register({ onClose, onLogin, onRegisterSuccess }) {
       }
     } catch (error) {
       console.error(error);
-      // Fallback for offline / direct registration mode
       alert("Account created successfully!");
       if (onRegisterSuccess) {
         onRegisterSuccess(userObj);
@@ -73,24 +95,25 @@ function Register({ onClose, onLogin, onRegisterSuccess }) {
         <div className="register-card">
 
           <div className="auth-card-header">
-            <h2>Register</h2>
+            <h2>Create Account</h2>
             <button type="button" className="close-btn" onClick={onClose}>
               ×
             </button>
           </div>
 
-          <p>Create your account to get started.</p>
+          <p>Sign up to save your delivery address and order in 1-click!</p>
 
           <input
             type="text"
-            placeholder="Full Name"
+            placeholder="Full Name *"
             name="fullName"
             value={formData.fullName}
             onChange={handleChange}
+            required
           />
           <input
             type="tel"
-            placeholder="Mobile Number"
+            placeholder="Mobile Number *"
             name="mobile"
             value={formData.mobile}
             onChange={handleChange}
@@ -98,22 +121,68 @@ function Register({ onClose, onLogin, onRegisterSuccess }) {
           />
           <input
             type="email"
-            placeholder="Email"
+            placeholder="Email Address (Optional)"
             name="email"
             value={formData.email}
             onChange={handleChange}
           />
           <input
             type="password"
-            placeholder="Password"
+            placeholder="Password *"
             name="password"
             value={formData.password}
             onChange={handleChange}
             required
           />
 
-          <button className="register-btn" type="button" onClick={handleRegister}>
-            Create Account
+          <div className="register-address-section" style={{ marginTop: "12px", textAlign: "left" }}>
+            <h4 style={{ margin: "8px 0 6px 0", fontSize: "14px", color: "#e63946" }}>📍 Default Delivery Address</h4>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+              <input
+                type="text"
+                placeholder="House / Flat No."
+                name="house"
+                value={formData.house}
+                onChange={handleChange}
+                style={{ margin: "0" }}
+              />
+              <input
+                type="text"
+                placeholder="Street / Area"
+                name="street"
+                value={formData.street}
+                onChange={handleChange}
+                style={{ margin: "0" }}
+              />
+              <input
+                type="text"
+                placeholder="Nearby Landmark"
+                name="landmark"
+                value={formData.landmark}
+                onChange={handleChange}
+                style={{ margin: "0" }}
+              />
+              <input
+                type="text"
+                placeholder="City"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                style={{ margin: "0" }}
+              />
+            </div>
+            <input
+              type="text"
+              placeholder="Pincode"
+              name="pincode"
+              value={formData.pincode}
+              onChange={handleChange}
+              style={{ marginTop: "8px" }}
+            />
+          </div>
+
+          <button className="register-btn" type="button" onClick={handleRegister} style={{ marginTop: "16px" }}>
+            Create Account & Save Address
           </button>
 
           <p className="auth-switch-text">
