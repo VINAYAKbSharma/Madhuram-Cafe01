@@ -390,12 +390,58 @@
   color: #ffffff;
 }
 
+/* Address Grid inside Delivery Address Card */
+.checkout-address-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+.checkout-address-grid input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 11px 14px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  font-size: 14px;
+  color: #0f172a;
+  font-family: 'Poppins', sans-serif;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.checkout-address-grid input::placeholder {
+  color: #64748b;
+}
+
+.checkout-address-grid input:focus {
+  border-color: #e63946;
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.15);
+}
+
+.checkout-address-grid input.full-width-input {
+  grid-column: span 2;
+}
+
 @media (max-width: 600px) {
   .checkout-page {
     padding: 20px 12px 80px 12px;
   }
 
   .checkout-card {
-    padding: 24px 18px;
+    padding: 24px 14px;
+  }
+
+  .checkout-address-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .checkout-address-grid input.full-width-input {
+    grid-column: span 1;
   }
 }

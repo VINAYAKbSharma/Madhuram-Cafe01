@@ -532,6 +532,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .form-field-group label {
@@ -541,6 +542,9 @@
 }
 
 .form-field-group input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background: #1c1c21;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
@@ -559,6 +563,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  width: 100%;
 }
 
 .save-address-btn {
@@ -702,5 +707,15 @@
 
   .user-display-name {
     font-size: 24px;
+  }
+
+  .form-row-2col {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .modal-dialog-box {
+    padding: 20px 14px;
+    max-width: 95vw;
   }
 }

@@ -137,14 +137,13 @@ function Register({ onClose, onLogin, onRegisterSuccess }) {
 
           <div className="register-address-section" style={{ marginTop: "12px", textAlign: "left" }}>
             <h4 style={{ margin: "8px 0 6px 0", fontSize: "14px", color: "#e63946" }}>📍 Default Delivery Address</h4>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+            <div className="register-address-grid">
               <input
                 type="text"
                 placeholder="House / Flat No."
                 name="house"
                 value={formData.house}
                 onChange={handleChange}
-                style={{ margin: "0" }}
               />
               <input
                 type="text"
@@ -152,7 +151,6 @@ function Register({ onClose, onLogin, onRegisterSuccess }) {
                 name="street"
                 value={formData.street}
                 onChange={handleChange}
-                style={{ margin: "0" }}
               />
               <input
                 type="text"
@@ -160,7 +158,6 @@ function Register({ onClose, onLogin, onRegisterSuccess }) {
                 name="landmark"
                 value={formData.landmark}
                 onChange={handleChange}
-                style={{ margin: "0" }}
               />
               <input
                 type="text"
@@ -168,7 +165,6 @@ function Register({ onClose, onLogin, onRegisterSuccess }) {
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
-                style={{ margin: "0" }}
               />
             </div>
             <input

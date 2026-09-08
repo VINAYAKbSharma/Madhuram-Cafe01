@@ -304,11 +304,11 @@ Platform Fee : ₹${platformFee}
             </div>
 
             {isEditingAddress && (
-              <div style={{ marginTop: "12px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              <div className="checkout-address-grid">
                 <input
                   type="text"
                   name="fullName"
-                  placeholder="Full Name"
+                  placeholder="Full Name *"
                   value={formData.fullName}
                   onChange={handleChange}
                   required
@@ -316,7 +316,7 @@ Platform Fee : ₹${platformFee}
                 <input
                   type="tel"
                   name="mobile"
-                  placeholder="Mobile Number"
+                  placeholder="Mobile Number *"
                   value={formData.mobile}
                   onChange={handleChange}
                   required
@@ -324,7 +324,7 @@ Platform Fee : ₹${platformFee}
                 <input
                   type="text"
                   name="house"
-                  placeholder="House / Flat No."
+                  placeholder="House / Flat No. *"
                   value={formData.house}
                   onChange={handleChange}
                   required
@@ -332,7 +332,7 @@ Platform Fee : ₹${platformFee}
                 <input
                   type="text"
                   name="street"
-                  placeholder="Street / Area"
+                  placeholder="Street / Area *"
                   value={formData.street}
                   onChange={handleChange}
                   required
@@ -347,7 +347,7 @@ Platform Fee : ₹${platformFee}
                 <input
                   type="text"
                   name="city"
-                  placeholder="City"
+                  placeholder="City *"
                   value={formData.city}
                   onChange={handleChange}
                   required
@@ -355,11 +355,11 @@ Platform Fee : ₹${platformFee}
                 <input
                   type="text"
                   name="pincode"
-                  placeholder="Pincode"
+                  placeholder="Pincode *"
                   value={formData.pincode}
                   onChange={handleChange}
                   required
-                  style={{ gridColumn: "span 2" }}
+                  className="full-width-input"
                 />
               </div>
             )}

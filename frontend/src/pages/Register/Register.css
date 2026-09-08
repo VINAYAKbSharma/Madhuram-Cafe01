@@ -199,6 +199,21 @@ flex:1;
 
 }
 
+.register-address-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.register-card .register-address-grid input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  height: 48px;
+  margin-bottom: 0;
+}
+
 @media(max-width:768px){
 
 .register-card{
@@ -210,6 +225,18 @@ padding:30px 20px;
 .button-group{
 
 flex-direction:column;
+
+}
+
+}
+
+@media(max-width:520px){
+
+.register-address-grid{
+
+grid-template-columns: 1fr;
+
+gap: 8px;
 
 }
 
