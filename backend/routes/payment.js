@@ -7,10 +7,34 @@ dotenv.config();
 
 const router = express.Router();
 
-const getRazorpayInstance = () => {
-  const key_id = process.env.RAZORPAY_KEY_ID || "rzp_live_TZZBu3G1koYPd6";
-  const key_secret = process.env.RAZORPAY_KEY_SECRET || "i7PZ1ucMYisVOPpj2jP805xX";
+const getActiveKeys = () => {
+  let key_id = process.env.RAZORPAY_KEY_ID;
+  let key_secret = process.env.RAZORPAY_KEY_SECRET;
 
+  // Ignore missing or stale expired test keys from legacy Vercel env vars
+  if (
+    !key_id ||
+    key_id.includes("TZWHwkttPmgYUN") ||
+    key_id.includes("TZV0qidx0ebyke") ||
+    key_id.includes("xxxx")
+  ) {
+    key_id = "rzp_live_TZZBu3G1koYPd6";
+  }
+
+  if (
+    !key_secret ||
+    key_secret.includes("Owdg6nm8pGPsTJfLwwXDbCx5") ||
+    key_secret.includes("W13hrfhOO7IGRcmLj0YnaFLd") ||
+    key_secret.includes("xxxx")
+  ) {
+    key_secret = "i7PZ1ucMYisVOPpj2jP805xX";
+  }
+
+  return { key_id, key_secret };
+};
+
+const getRazorpayInstance = () => {
+  const { key_id, key_secret } = getActiveKeys();
   return new Razorpay({
     key_id,
     key_secret,
@@ -19,8 +43,8 @@ const getRazorpayInstance = () => {
 
 // GET /api/payment/key - Expose public key ID for frontend integration
 router.get("/key", (req, res) => {
-  const keyId = process.env.RAZORPAY_KEY_ID || "rzp_live_TZZBu3G1koYPd6";
-  return res.json({ success: true, key: keyId });
+  const { key_id } = getActiveKeys();
+  return res.json({ success: true, key: key_id });
 });
 
 // Helper function to handle order creation
@@ -49,6 +73,7 @@ const handleCreateOrder = async (req, res) => {
     }
 
     const razorpay = getRazorpayInstance();
+    const { key_id } = getActiveKeys();
 
     const options = {
       amount: amountInPaise,
@@ -65,7 +90,7 @@ const handleCreateOrder = async (req, res) => {
       order,
       amount: order.amount,
       currency: order.currency,
-      key: process.env.RAZORPAY_KEY_ID || "rzp_live_TZZBu3G1koYPd6",
+      key: key_id,
     });
   } catch (error) {
     console.error("Razorpay order creation error:", error);
@@ -97,9 +122,9 @@ const handleVerifyPayment = async (req, res) => {
       });
     }
 
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || "i7PZ1ucMYisVOPpj2jP805xX";
+    const { key_secret } = getActiveKeys();
 
-    const hmac = crypto.createHmac("sha256", keySecret);
+    const hmac = crypto.createHmac("sha256", key_secret);
     hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
     const generatedSignature = hmac.digest("hex");
 

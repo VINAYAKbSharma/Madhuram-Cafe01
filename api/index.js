@@ -16,9 +16,17 @@ app.use(express.json());
 
 // API routes
 app.use("/api/auth", authRouter);
+app.use("/auth", authRouter);
+
 app.use("/api/orders", ordersRouter);
+app.use("/orders", ordersRouter);
+
 app.use("/api/payment", paymentRouter);
+app.use("/payment", paymentRouter);
+
 app.use("/api/woocommerce", woocommerceRouter);
+app.use("/woocommerce", woocommerceRouter);
+
 app.use("/api", paymentRouter);
 
 

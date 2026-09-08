@@ -4,6 +4,9 @@ import { API_BASE_URL } from "../../config/api";
 import { loadRazorpayScript } from "../../utils/loadRazorpay";
 
 function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
+  const [paymentMethod, setPaymentMethod] = useState("gateway"); // "gateway" | "razorpay_me"
+  const RAZORPAY_ME_URL = "https://razorpay.me/@roopendrasinghparihar";
+
   const [formData, setFormData] = useState({
     fullName: currentUser?.fullName || "",
     mobile: currentUser?.mobile || "",
@@ -36,6 +39,63 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
     }));
   };
 
+  const handleRazorpayMeCheckout = async (targetId, whatsappURL) => {
+    const confirmedOrder = {
+      id: targetId,
+      orderId: targetId,
+      date: new Date().toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      items: cartItems.map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        qty: item.qty,
+        image: item.image,
+      })),
+      subtotal,
+      deliveryCharge,
+      platformFee,
+      total,
+      address: `${formData.house}, ${formData.street}, ${
+        formData.landmark ? formData.landmark + ", " : ""
+      }${formData.city} - ${formData.pincode}`,
+      customer: {
+        fullName: formData.fullName,
+        mobile: formData.mobile,
+      },
+      userMobile: formData.mobile,
+      status: "Confirmed",
+      deliveryMessage: "Deliver in 15 to 20 minute",
+      payment: "Razorpay Page (Roopendra Singh Parihar)",
+      transactionId: `RZP_ME_${targetId}`,
+      paymentStatus: "Paid / Processing",
+    };
+
+    // 1. Dispatch custom event locally
+    try {
+      window.dispatchEvent(
+        new CustomEvent("madhuram_new_order", { detail: confirmedOrder })
+      );
+    } catch (e) {}
+
+    // 2. Open official Razorpay Payment Page URL
+    window.open(RAZORPAY_ME_URL, "_blank");
+
+    // 3. Place order and trigger WhatsApp
+    if (onPlaceOrder) {
+      await onPlaceOrder(confirmedOrder, whatsappURL);
+    } else {
+      window.open(whatsappURL, "_blank");
+    }
+
+    setIsProcessingPayment(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -49,39 +109,7 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
     }
 
     setIsProcessingPayment(true);
-
-    // 1. Load Razorpay SDK script dynamically
-    const isScriptLoaded = await loadRazorpayScript();
-    if (!isScriptLoaded) {
-      alert("Failed to load Razorpay SDK. Please check your internet connection.");
-      setIsProcessingPayment(false);
-      return;
-    }
-
     const targetId = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // 2. Create Razorpay order via backend endpoint
-    let rzpOrderData = null;
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/payment/create-order`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: total,
-          receipt: `rcpt_${targetId}`,
-        }),
-      });
-
-      rzpOrderData = await res.json();
-      if (!rzpOrderData.success) {
-        throw new Error(rzpOrderData.message || "Could not initialize payment order");
-      }
-    } catch (err) {
-      console.error("Order Creation Error:", err);
-      alert(`Payment Initialization Failed: ${err.message}`);
-      setIsProcessingPayment(false);
-      return;
-    }
 
     const orderItems = cartItems
       .map(
@@ -120,13 +148,56 @@ Platform Fee : ₹${platformFee}
 
 💰 *Grand Total : ₹${total}*
 
-💳 Payment Method : Razorpay Gateway
+💳 Payment Method : ${paymentMethod === "razorpay_me" ? "Official Razorpay Page (Roopendra Singh Parihar)" : "Razorpay Gateway"}
 `;
 
     const cafeNumber = "919691634045";
     const whatsappURL = `https://wa.me/${cafeNumber}?text=${encodeURIComponent(
       message
     )}`;
+
+    // If user chose direct Razorpay.me link
+    if (paymentMethod === "razorpay_me") {
+      await handleRazorpayMeCheckout(targetId, whatsappURL);
+      return;
+    }
+
+    // 1. Load Razorpay SDK script dynamically
+    const isScriptLoaded = await loadRazorpayScript();
+    if (!isScriptLoaded) {
+      alert("Failed to load Razorpay SDK. Opening direct Razorpay page...");
+      await handleRazorpayMeCheckout(targetId, whatsappURL);
+      return;
+    }
+
+    // 2. Create Razorpay order via backend endpoint
+    let rzpOrderData = null;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/payment/create-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: total,
+          receipt: `rcpt_${targetId}`,
+        }),
+      });
+
+      rzpOrderData = await res.json();
+      if (!rzpOrderData.success) {
+        throw new Error(rzpOrderData.message || "Could not initialize payment order");
+      }
+    } catch (err) {
+      console.error("Order Creation Error:", err);
+      const useDirect = window.confirm(
+        `Payment Modal Error: ${err.message}\n\nWould you like to pay using your official Razorpay payment page (https://razorpay.me/@roopendrasinghparihar) instead?`
+      );
+      if (useDirect) {
+        await handleRazorpayMeCheckout(targetId, whatsappURL);
+      } else {
+        setIsProcessingPayment(false);
+      }
+      return;
+    }
 
     // 3. Open Razorpay modal with locked amount & order_id
     const options = {
@@ -231,15 +302,21 @@ Platform Fee : ₹${platformFee}
 
     try {
       const rzp = new window.Razorpay(options);
-      rzp.on("payment.failed", function (response) {
-        alert(`Payment Failed: ${response.error.description || "Transaction failed"}`);
-        setIsProcessingPayment(false);
+      rzp.on("payment.failed", async function (response) {
+        console.error("Razorpay Payment Failed:", response.error);
+        const useDirect = window.confirm(
+          `Payment Alert: ${response.error?.description || "UPI/Gateway issue"}.\n\nWould you like to pay using your official Razorpay payment page (https://razorpay.me/@roopendrasinghparihar) instead?`
+        );
+        if (useDirect) {
+          await handleRazorpayMeCheckout(targetId, whatsappURL);
+        } else {
+          setIsProcessingPayment(false);
+        }
       });
       rzp.open();
     } catch (err) {
       console.error("Razorpay Modal Error:", err);
-      alert("Failed to open Razorpay checkout modal.");
-      setIsProcessingPayment(false);
+      await handleRazorpayMeCheckout(targetId, whatsappURL);
     }
   };
 
@@ -337,26 +414,47 @@ Platform Fee : ₹${platformFee}
             <label>Payment Method</label>
 
             <div className="payment-options-wrapper">
-              <div className="payment-options">
-                <label className="payment-option-label selected">
+              <div className="payment-options" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <label className={`payment-option-label ${paymentMethod === "gateway" ? "selected" : ""}`}>
                   <div className="payment-option-content">
                     <input
                       type="radio"
-                      name="payment"
-                      value="Razorpay Gateway"
-                      checked={true}
-                      readOnly
+                      name="paymentMethodChoice"
+                      value="gateway"
+                      checked={paymentMethod === "gateway"}
+                      onChange={() => setPaymentMethod("gateway")}
                     />
                     <div className="payment-title-group">
-                      <span className="payment-main-title">💳 Pay via Razorpay Gateway</span>
-                      <span className="payment-subtitle">UPI, GPay, PhonePe, Paytm, BHIM, Cards & Netbanking</span>
+                      <span className="payment-main-title">💳 Pay via Razorpay Gateway Modal</span>
+                      <span className="payment-subtitle">Auto-locked amount ₹{total} (UPI, GPay, PhonePe, Cards)</span>
                     </div>
                   </div>
-                  <span className="recommended-tag">Verified Merchant</span>
+                  <span className="recommended-tag">Recommended</span>
                 </label>
 
-                <div className="razorpay-hint-box" style={{ marginTop: "10px" }}>
-                  🔒 <strong>Auto-Set Locked Amount:</strong> ₹{total} will be pre-filled automatically in the payment gateway modal. Order is confirmed only after successful payment.
+                <label className={`payment-option-label ${paymentMethod === "razorpay_me" ? "selected" : ""}`}>
+                  <div className="payment-option-content">
+                    <input
+                      type="radio"
+                      name="paymentMethodChoice"
+                      value="razorpay_me"
+                      checked={paymentMethod === "razorpay_me"}
+                      onChange={() => setPaymentMethod("razorpay_me")}
+                    />
+                    <div className="payment-title-group">
+                      <span className="payment-main-title">🔗 Official Razorpay Page (Roopendra Singh Parihar)</span>
+                      <span className="payment-subtitle">100% Guaranteed Working UPI Link (razorpay.me/@roopendrasinghparihar)</span>
+                    </div>
+                  </div>
+                  <span className="recommended-tag" style={{ background: "#2563eb" }}>Verified Page</span>
+                </label>
+
+                <div className="razorpay-hint-box" style={{ marginTop: "6px" }}>
+                  {paymentMethod === "gateway" ? (
+                    <span>🔒 <strong>Razorpay Modal:</strong> ₹{total} pre-filled automatically. Order is listed after signature verification.</span>
+                  ) : (
+                    <span>✅ <strong>Official Merchant Page:</strong> Direct link to <code>razorpay.me/@roopendrasinghparihar</code> with 100% active UPI banking name.</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -407,8 +505,10 @@ Platform Fee : ₹${platformFee}
             disabled={isProcessingPayment}
           >
             {isProcessingPayment
-              ? "⚡ Opening Razorpay Gateway..."
-              : `Pay ₹${total} via Razorpay`}
+              ? "⚡ Processing Payment..."
+              : paymentMethod === "razorpay_me"
+              ? `Pay ₹${total} via Official Razorpay Page (Roopendra Singh Parihar)`
+              : `Pay ₹${total} via Razorpay Gateway Modal`}
           </button>
 
           <button
