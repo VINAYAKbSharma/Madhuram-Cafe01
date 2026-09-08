@@ -22,6 +22,8 @@ app.use(express.json());
 app.use("/api/auth", authRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/payment", paymentRouter);
+app.use("/api", paymentRouter);
+
 
 
 const distPath = path.join(__dirname, "../frontend/dist");

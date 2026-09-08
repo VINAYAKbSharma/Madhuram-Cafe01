@@ -208,84 +208,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
     sessionStorage.removeItem("madhuram_admin_session");
   };
 
-  // Confirm Order (Pending -> Confirmed)
-  const handleConfirmOrder = async (orderId) => {
-    try {
-      // 1. Update central backend database/API
-      fetch(`${API_BASE_URL}/api/orders/${orderId}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: "Confirmed",
-          deliveryMessage: "Deliver in 15 to 20 minute",
-        }),
-      }).catch((err) => console.warn("Backend status sync warning:", err));
 
-      const rawOrders = localStorage.getItem("madhuram_orders");
-      const allOrders = rawOrders ? JSON.parse(rawOrders) : [];
-      const targetOrder = allOrders.find((o) => o.id === orderId);
-
-      const updatedAllOrders = allOrders.map((o) =>
-        o.id === orderId
-          ? { ...o, status: "Confirmed", deliveryMessage: "Deliver in 15 to 20 minute" }
-          : o
-      );
-
-      localStorage.setItem("madhuram_orders", JSON.stringify(updatedAllOrders));
-      setOrdersList(updatedAllOrders);
-
-      // Update user specific orders list
-      const mobile = targetOrder?.userMobile || targetOrder?.customer?.mobile;
-      if (mobile) {
-        const rawUserOrders = localStorage.getItem(`madhuram_orders_${mobile}`);
-        if (rawUserOrders) {
-          const userOrders = JSON.parse(rawUserOrders);
-          const updatedUserOrders = userOrders.map((o) =>
-            o.id === orderId
-              ? { ...o, status: "Confirmed", deliveryMessage: "Deliver in 15 to 20 minute" }
-              : o
-          );
-          localStorage.setItem(
-            `madhuram_orders_${mobile}`,
-            JSON.stringify(updatedUserOrders)
-          );
-        }
-
-        // Save User Notification
-        const userNotifsRaw = localStorage.getItem(`madhuram_notifs_${mobile}`);
-        const userNotifs = userNotifsRaw ? JSON.parse(userNotifsRaw) : [];
-        const newNotif = {
-          id: Date.now().toString(),
-          orderId,
-          title: "Order Confirmed! 🎉",
-          message: `Your Order #${orderId} has been confirmed by Madhuram Cafe! Food is being prepared.`,
-          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          read: false,
-        };
-        localStorage.setItem(`madhuram_notifs_${mobile}`, JSON.stringify([newNotif, ...userNotifs]));
-      }
-
-      // Dispatch global window event for real-time notification to user
-      window.dispatchEvent(
-        new CustomEvent("madhuram_order_confirmed", {
-          detail: {
-            orderId,
-            mobile,
-            title: "Order Confirmed! 🎉",
-            message: `Your Order #${orderId} has been confirmed by Madhuram Cafe!`,
-          },
-        })
-      );
-
-      if (newOrderAlert?.id === orderId) {
-        setNewOrderAlert(null);
-      }
-
-      onOrdersUpdated && onOrdersUpdated();
-    } catch (err) {
-      console.error("Error confirming order:", err);
-    }
-  };
 
   // Mark Order as Delivered
   const handleConfirmDelivery = async (orderId) => {
@@ -579,19 +502,13 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
             <div className="alert-actions">
               <button
                 type="button"
-                className="confirm-order-btn-fast"
-                onClick={() => handleConfirmOrder(newOrderAlert.id)}
-              >
-                <FaCheckCircle /> Confirm Order Now
-              </button>
-              <button
-                type="button"
                 className="dismiss-alert-btn"
                 onClick={() => setNewOrderAlert(null)}
               >
                 Dismiss
               </button>
             </div>
+
           </div>
         )}
 
@@ -822,15 +739,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
                         </div>
 
                         <div className="admin-actions-group">
-                          {isPending && (
-                            <button
-                              type="button"
-                              className="confirm-order-action-btn"
-                              onClick={() => handleConfirmOrder(order.id)}
-                            >
-                              <FaCheckCircle /> Confirm Order
-                            </button>
-                          )}
+
 
                           {!isDelivered && (
                             <button

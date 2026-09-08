@@ -2,7 +2,6 @@ import { useState } from "react";
 import "./Checkout.css";
 import { API_BASE_URL } from "../../config/api";
 import { loadRazorpayScript } from "../../utils/loadRazorpay";
-import upiQrImg from "../../assets/upi_qr.jpg";
 
 function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
   const [formData, setFormData] = useState({
@@ -13,15 +12,12 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
     landmark: "",
     city: "",
     pincode: "",
-    payment: "Razorpay Gateway", // Default to Razorpay Gateway like food delivery apps
-    upiUtr: "",
+    payment: "Razorpay Gateway",
   });
 
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [copiedUpi, setCopiedUpi] = useState(false);
 
   const MIN_ORDER_AMOUNT = 200;
-  const CAFE_UPI_ID = "9691634045@ybl";
 
   const subtotal = cartItems.reduce(
     (total, item) => total + item.price * item.qty,
@@ -38,12 +34,6 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
       ...prev,
       [name]: value,
     }));
-  };
-
-  const copyUpiId = () => {
-    navigator.clipboard.writeText(CAFE_UPI_ID);
-    setCopiedUpi(true);
-    setTimeout(() => setCopiedUpi(false), 2500);
   };
 
   const handleSubmit = async (e) => {
@@ -98,7 +88,6 @@ Platform Fee : ₹${platformFee}
 💰 *Grand Total : ₹${total}*
 
 💳 Payment Method : ${formData.payment}
-${formData.upiUtr ? `🔢 UTR / Txn Ref : ${formData.upiUtr}` : ""}
 `;
 
     const cafeNumber = "919691634045";
@@ -134,57 +123,12 @@ ${formData.upiUtr ? `🔢 UTR / Txn Ref : ${formData.upiUtr}` : ""}
         fullName: formData.fullName,
         mobile: formData.mobile,
       },
-      userMobile: formData.mobile,
-      status: "Pending",
-      deliveryMessage: "Pending Admin Confirmation",
+      status: "Confirmed",
+      deliveryMessage: "Deliver in 15 to 20 minute",
     };
 
-    // 1. CASH ON DELIVERY
-    if (formData.payment === "Cash on Delivery") {
-      const codOrder = {
-        ...newOrderBase,
-        payment: "Cash on Delivery",
-        transactionId: null,
-      };
 
-      try {
-        window.dispatchEvent(
-          new CustomEvent("madhuram_new_order", { detail: codOrder })
-        );
-      } catch (err) {}
-
-      if (onPlaceOrder) {
-        onPlaceOrder(codOrder, whatsappURL);
-      } else {
-        window.open(whatsappURL, "_blank");
-      }
-      return;
-    }
-
-    // 2. DIRECT UPI QR PAYMENT
-    if (formData.payment === "Direct UPI QR") {
-      const upiOrder = {
-        ...newOrderBase,
-        payment: "Direct UPI QR Code",
-        transactionId: formData.upiUtr || `UPI_${Date.now()}`,
-        paymentStatus: "Paid / Pending Verification",
-      };
-
-      try {
-        window.dispatchEvent(
-          new CustomEvent("madhuram_new_order", { detail: upiOrder })
-        );
-      } catch (err) {}
-
-      if (onPlaceOrder) {
-        onPlaceOrder(upiOrder, whatsappURL);
-      } else {
-        window.open(whatsappURL, "_blank");
-      }
-      return;
-    }
-
-    // 3. RAZORPAY PAYMENT GATEWAY (UPI / GPAY / PHONEPE / CARDS / NETBANKING)
+    // RAZORPAY PAYMENT GATEWAY ONLY
     setIsProcessingPayment(true);
 
     try {
@@ -215,7 +159,7 @@ ${formData.upiUtr ? `🔢 UTR / Txn Ref : ${formData.upiUtr}` : ""}
       const { order, key } = data;
 
       const options = {
-        key: key || "rzp_test_TZV0qidx0ebyke",
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || key || "rzp_test_TZWHwkttPmgYUN",
         amount: order.amount,
         currency: order.currency || "INR",
         name: "Madhuram Cafe",
@@ -246,11 +190,14 @@ ${formData.upiUtr ? `🔢 UTR / Txn Ref : ${formData.upiUtr}` : ""}
             if (verifyData.success) {
               const paidOrder = {
                 ...newOrderBase,
-                payment: "Razorpay Gateway (Online / UPI)",
+                status: "Confirmed",
+                deliveryMessage: "Deliver in 15 to 20 minute",
+                payment: "Razorpay Gateway (Paid)",
                 transactionId: response.razorpay_payment_id,
                 razorpayOrderId: response.razorpay_order_id,
                 paymentStatus: "Paid",
               };
+
 
               try {
                 window.dispatchEvent(
@@ -288,7 +235,7 @@ ${formData.upiUtr ? `🔢 UTR / Txn Ref : ${formData.upiUtr}` : ""}
       rzp.open();
     } catch (err) {
       console.error("Razorpay payment initialization error:", err);
-      alert("Payment gateway error. Please try again or choose Direct UPI QR.");
+      alert("Payment gateway error. Please try again.");
       setIsProcessingPayment(false);
     }
   };
@@ -388,104 +335,22 @@ ${formData.upiUtr ? `🔢 UTR / Txn Ref : ${formData.upiUtr}` : ""}
 
             <div className="payment-options-wrapper">
               <div className="payment-options">
-                {/* 1. RAZORPAY PAYMENT GATEWAY (PRIMARY) */}
-                <label
-                  className={`payment-option-label ${
-                    formData.payment === "Razorpay Gateway" ? "selected" : ""
-                  }`}
-                >
+                {/* RAZORPAY PAYMENT GATEWAY ONLY */}
+                <label className="payment-option-label selected">
                   <div className="payment-option-content">
                     <input
                       type="radio"
                       name="payment"
                       value="Razorpay Gateway"
-                      checked={formData.payment === "Razorpay Gateway"}
-                      onChange={handleChange}
+                      checked={true}
+                      readOnly
                     />
                     <div className="payment-title-group">
                       <span className="payment-main-title">💳 Razorpay Gateway (UPI / GPay / PhonePe / Cards)</span>
-                      <span className="payment-subtitle">Pay via UPI Apps, GPay, PhonePe, Cards, Netbanking</span>
+                      <span className="payment-subtitle">Pay securely via Google Pay, PhonePe, Paytm, Cards, Netbanking</span>
                     </div>
                   </div>
-                  <span className="recommended-tag">Recommended</span>
-                </label>
-
-                {formData.payment === "Razorpay Gateway" && (
-                  <div className="razorpay-hint-box">
-                    💡 <strong>Razorpay Test Mode:</strong> Opens secure payment gateway popup. On desktop test mode, use test UPI ID <code>success@razorpay</code> or Cards.
-                  </div>
-                )}
-
-                {/* 2. DIRECT CAFE UPI QR OPTION */}
-                <label
-                  className={`payment-option-label ${
-                    formData.payment === "Direct UPI QR" ? "selected" : ""
-                  }`}
-                >
-                  <div className="payment-option-content">
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="Direct UPI QR"
-                      checked={formData.payment === "Direct UPI QR"}
-                      onChange={handleChange}
-                    />
-                    <div className="payment-title-group">
-                      <span className="payment-main-title">📱 Pay via Direct Cafe UPI QR Code</span>
-                      <span className="payment-subtitle">Scan Cafe QR code or pay directly to UPI ID</span>
-                    </div>
-                  </div>
-                </label>
-
-                {/* Direct UPI Box details when selected */}
-                {formData.payment === "Direct UPI QR" && (
-                  <div className="direct-upi-box">
-                    <div className="qr-container">
-                      <img src={upiQrImg} alt="Madhuram Cafe UPI QR" className="upi-qr-image" />
-                      <p className="qr-hint">Scan with GPay, PhonePe, Paytm, BHIM</p>
-                    </div>
-
-                    <div className="upi-details">
-                      <div className="upi-id-row">
-                        <span>UPI ID: <strong>{CAFE_UPI_ID}</strong></span>
-                        <button type="button" className="copy-btn" onClick={copyUpiId}>
-                          {copiedUpi ? "✓ Copied!" : "📋 Copy"}
-                        </button>
-                      </div>
-
-                      <div className="utr-input-group">
-                        <label>Transaction UTR / Reference No. (Optional):</label>
-                        <input
-                          type="text"
-                          name="upiUtr"
-                          placeholder="e.g. 425102938475"
-                          value={formData.upiUtr}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. CASH ON DELIVERY OPTION */}
-                <label
-                  className={`payment-option-label ${
-                    formData.payment === "Cash on Delivery" ? "selected" : ""
-                  }`}
-                >
-                  <div className="payment-option-content">
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="Cash on Delivery"
-                      checked={formData.payment === "Cash on Delivery"}
-                      onChange={handleChange}
-                    />
-                    <div className="payment-title-group">
-                      <span className="payment-main-title">💵 Cash on Delivery (COD)</span>
-                      <span className="payment-subtitle">Pay with cash when food arrives</span>
-                    </div>
-                  </div>
+                  <span className="recommended-tag">Secured</span>
                 </label>
               </div>
             </div>
@@ -537,11 +402,7 @@ ${formData.upiUtr ? `🔢 UTR / Txn Ref : ${formData.upiUtr}` : ""}
           >
             {isProcessingPayment
               ? "⚡ Opening Razorpay Gateway..."
-              : formData.payment === "Razorpay Gateway"
-              ? `Pay ₹${total} via Razorpay Gateway`
-              : formData.payment === "Direct UPI QR"
-              ? `Place Order & Pay ₹${total} via UPI QR`
-              : "Continue with Cash on Delivery"}
+              : `Pay ₹${total} via Razorpay`}
           </button>
 
           <button

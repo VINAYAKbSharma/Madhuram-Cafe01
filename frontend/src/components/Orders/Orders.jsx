@@ -51,22 +51,16 @@ function Orders({ orders = [], onBackHome, onBrowseMenu, user }) {
                     className={`status-pill ${
                       order.status === "Delivered"
                         ? "status-delivered"
-                        : order.status === "Confirmed"
-                        ? "status-confirmed"
-                        : "status-pending"
+                        : "status-confirmed"
                     }`}
                   >
                     {order.status === "Delivered" ? (
                       <>
                         <FaCheckCircle /> Delivered
                       </>
-                    ) : order.status === "Confirmed" ? (
-                      <>
-                        <FaCheckCircle /> Confirmed
-                      </>
                     ) : (
                       <>
-                        <FaClock /> Pending Confirmation
+                        <FaCheckCircle /> Confirmed
                       </>
                     )}
                   </span>
@@ -81,7 +75,7 @@ function Orders({ orders = [], onBackHome, onBrowseMenu, user }) {
                       <span className="delivery-time delivered-text">Order Delivered Successfully!</span>
                     </div>
                   </div>
-                ) : order.status === "Confirmed" ? (
+                ) : (
                   <div className="delivery-banner confirmed-banner">
                     <FaCheckCircle className="clock-icon confirmed-icon" style={{ color: "#22c55e" }} />
                     <div className="delivery-text">
@@ -89,15 +83,8 @@ function Orders({ orders = [], onBackHome, onBrowseMenu, user }) {
                       <span className="delivery-time" style={{ color: "#22c55e" }}>Food is being prepared! Deliver in 15 to 20 minute</span>
                     </div>
                   </div>
-                ) : (
-                  <div className="delivery-banner pending-banner">
-                    <FaClock className="clock-icon pending-icon" style={{ color: "#f59e0b" }} />
-                    <div className="delivery-text">
-                      <span className="delivery-title">Order Status</span>
-                      <span className="delivery-time" style={{ color: "#f59e0b" }}>⏳ Waiting for Admin Confirmation...</span>
-                    </div>
-                  </div>
                 )}
+
 
                 {/* Items List */}
                 <div className="order-items-list">

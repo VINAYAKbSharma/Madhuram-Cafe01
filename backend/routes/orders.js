@@ -91,9 +91,10 @@ router.post("/", async (req, res) => {
       address: address || "",
       customer: customer || { fullName: "", mobile: "" },
       userMobile: mobile,
-      status: status || "Pending",
-      deliveryMessage: deliveryMessage || "Pending Admin Confirmation",
+      status: status || "Confirmed",
+      deliveryMessage: deliveryMessage || "Deliver in 15 to 20 minute",
     };
+
 
     // Save to in-memory store first
     const existingIndex = inMemoryOrders.findIndex((o) => o.id === targetId);
