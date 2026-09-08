@@ -37,7 +37,7 @@ function OfferBanner() {
         </h3>
 
         <div className="coupon">
-          Coupon Code: <strong>SAME</strong>
+          Apply Discount Vouchers at Checkout
         </div>
 
         <div className="offer-features">

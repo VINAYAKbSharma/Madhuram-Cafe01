@@ -98,6 +98,7 @@ function App() {
   const [couponCode, setCouponCode] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
   const [couponMessage, setCouponMessage] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState(0);
 
   const [showAllFood, setShowAllFood] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -584,28 +585,80 @@ function App() {
   // Coupon
   // ===========================
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     if (couponApplied) {
       setCouponApplied(false);
       setCouponCode("");
       setCouponMessage("");
+      setAppliedDiscount(0);
       return;
     }
 
-    const trimmed = couponCode.trim().toLowerCase();
+    const trimmed = couponCode.trim();
     if (!trimmed) {
       setCouponApplied(false);
       setCouponMessage("Please enter a coupon code.");
+      setAppliedDiscount(0);
       return;
     }
 
-    const validCodes = ["same", "madhuram", "welcome", "off20", "discount", "same20", "madhuram20"];
-    if (validCodes.includes(trimmed) || trimmed.length >= 3) {
-      setCouponApplied(true);
-      setCouponMessage("🎉 Coupon Applied! 20% Discount Unlocked.");
-    } else {
-      setCouponApplied(false);
-      setCouponMessage("❌ Invalid Coupon Code.");
+    const subtotal = cartItems.reduce((total, item) => total + item.price * item.qty, 0);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/coupons/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: trimmed,
+          mobile: currentUser?.mobile || "",
+          amount: subtotal,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setCouponApplied(true);
+        setCouponMessage(data.message);
+        setAppliedDiscount(data.discountAmount || 0);
+      } else {
+        setCouponApplied(false);
+        setCouponMessage(data.message || "❌ Invalid Coupon Code.");
+        setAppliedDiscount(0);
+      }
+    } catch (err) {
+      console.error("Coupon validation error:", err);
+      let localCoupons = [];
+      try {
+        const raw = localStorage.getItem("madhuram_coupons");
+        localCoupons = raw ? JSON.parse(raw) : [];
+      } catch {}
+
+      const found = localCoupons.find(
+        (c) => c.code.toUpperCase() === trimmed.toUpperCase() && c.active !== false
+      );
+
+      if (!found) {
+        setCouponApplied(false);
+        setCouponMessage("❌ Invalid or expired coupon code.");
+        setAppliedDiscount(0);
+      } else if (found.targetUser !== "ALL" && found.targetUser !== currentUser?.mobile) {
+        setCouponApplied(false);
+        setCouponMessage("❌ This coupon is not valid for your account.");
+        setAppliedDiscount(0);
+      } else if (subtotal < (found.minOrderAmount || 0)) {
+        setCouponApplied(false);
+        setCouponMessage(`❌ Minimum order value of ₹${found.minOrderAmount} required.`);
+        setAppliedDiscount(0);
+      } else {
+        const disc =
+          found.discountType === "fixed"
+            ? Math.min(found.discountValue, subtotal)
+            : Math.round((subtotal * found.discountValue) / 100);
+
+        setCouponApplied(true);
+        setCouponMessage(`🎉 Coupon '${found.code}' Applied! Discount: ₹${disc}`);
+        setAppliedDiscount(disc);
+      }
     }
   };
 
@@ -638,6 +691,7 @@ function App() {
               onApplyCoupon={handleApplyCoupon}
               couponApplied={couponApplied}
               couponMessage={couponMessage}
+              appliedDiscount={appliedDiscount}
             />
           )}
 

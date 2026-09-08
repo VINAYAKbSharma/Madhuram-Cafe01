@@ -7,6 +7,7 @@ import authRouter from "./routes/auth.js";
 import ordersRouter from "./routes/orders.js";
 import paymentRouter from "./routes/payment.js";
 import woocommerceRouter from "./routes/woocommerce.js";
+import couponsRouter from "./routes/coupons.js";
 import cors from "cors";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -24,6 +25,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/payment", paymentRouter);
 app.use("/api/woocommerce", woocommerceRouter);
+app.use("/api/coupons", couponsRouter);
 app.use("/api", paymentRouter);
 
 

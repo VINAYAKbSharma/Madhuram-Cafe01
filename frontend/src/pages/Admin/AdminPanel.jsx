@@ -11,6 +11,9 @@ import {
   FaArrowLeft,
   FaSearch,
   FaTrash,
+  FaTicketAlt,
+  FaPlus,
+  FaGift,
 } from "react-icons/fa";
 import { ADMIN_CREDENTIALS } from "../../config/adminConfig";
 import { API_BASE_URL } from "../../config/api";
@@ -53,13 +56,25 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [loginError, setLoginError] = useState("");
 
-  const [activeTab, setActiveTab] = useState("dashboard"); // "dashboard" | "orders" | "clients"
+  const [activeTab, setActiveTab] = useState("dashboard"); // "dashboard" | "clients" | "vouchers"
   const [orderFilter, setOrderFilter] = useState("all"); // "all" | "pending" | "delivered"
   const [searchTerm, setSearchTerm] = useState("");
 
   const [ordersList, setOrdersList] = useState([]);
   const [clientsList, setClientsList] = useState([]);
+  const [couponsList, setCouponsList] = useState([]);
   const [newOrderAlert, setNewOrderAlert] = useState(null);
+
+  const [newCouponForm, setNewCouponForm] = useState({
+    code: "",
+    discountType: "percentage",
+    discountValue: "",
+    minOrderAmount: "200",
+    targetType: "ALL",
+    targetMobile: "",
+    description: "",
+  });
+  const [couponCreating, setCouponCreating] = useState(false);
 
   // Load data from central API & localStorage fallback
   const loadData = async () => {
@@ -114,6 +129,113 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
         setClientsList([]);
       }
     }
+
+    // Load Coupons
+    try {
+      const coupRes = await fetch(`${API_BASE_URL}/api/coupons`);
+      if (coupRes.ok) {
+        const coupData = await coupRes.json();
+        if (coupData.success && Array.isArray(coupData.coupons)) {
+          setCouponsList(coupData.coupons);
+          try {
+            localStorage.setItem("madhuram_coupons", JSON.stringify(coupData.coupons));
+          } catch {}
+        }
+      }
+    } catch {
+      try {
+        const raw = localStorage.getItem("madhuram_coupons");
+        setCouponsList(raw ? JSON.parse(raw) : []);
+      } catch {
+        setCouponsList([]);
+      }
+    }
+  };
+
+  const handleCreateCoupon = async (e) => {
+    e.preventDefault();
+    if (!newCouponForm.code || !newCouponForm.discountValue) {
+      alert("Please enter Coupon Code and Discount Value.");
+      return;
+    }
+
+    setCouponCreating(true);
+
+    const targetUser =
+      newCouponForm.targetType === "ALL" ? "ALL" : newCouponForm.targetMobile.trim();
+
+    const payload = {
+      code: newCouponForm.code.trim().toUpperCase(),
+      discountType: newCouponForm.discountType,
+      discountValue: Number(newCouponForm.discountValue),
+      minOrderAmount: Number(newCouponForm.minOrderAmount || 0),
+      targetUser: targetUser || "ALL",
+      description:
+        newCouponForm.description.trim() ||
+        `${newCouponForm.discountType === "fixed" ? "₹" + newCouponForm.discountValue : newCouponForm.discountValue + "%"} Off Discount Coupon`,
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/coupons`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        const updatedList = data.coupons || [payload, ...couponsList];
+        setCouponsList(updatedList);
+        try {
+          localStorage.setItem("madhuram_coupons", JSON.stringify(updatedList));
+        } catch {}
+        alert(`🎉 Coupon '${payload.code}' issued successfully for ${targetUser === "ALL" ? "ALL users" : "User " + targetUser}!`);
+        setNewCouponForm({
+          code: "",
+          discountType: "percentage",
+          discountValue: "",
+          minOrderAmount: "200",
+          targetType: "ALL",
+          targetMobile: "",
+          description: "",
+        });
+      } else {
+        alert(data.message || "Failed to create coupon.");
+      }
+    } catch (err) {
+      console.error("Coupon creation error:", err);
+      const fallbackCoupon = {
+        id: `coup_${Date.now()}`,
+        ...payload,
+        active: true,
+        createdAt: new Date().toISOString(),
+      };
+      const updated = [fallbackCoupon, ...couponsList];
+      setCouponsList(updated);
+      try {
+        localStorage.setItem("madhuram_coupons", JSON.stringify(updated));
+      } catch {}
+      alert(`🎉 Coupon '${payload.code}' issued!`);
+    } finally {
+      setCouponCreating(false);
+    }
+  };
+
+  const handleDeleteCoupon = async (couponId) => {
+    const confirmDel = window.confirm("Are you sure you want to delete this voucher?");
+    if (!confirmDel) return;
+
+    try {
+      await fetch(`${API_BASE_URL}/api/coupons/${couponId}`, {
+        method: "DELETE",
+      });
+    } catch {}
+
+    const updated = couponsList.filter((c) => c.id !== couponId && c.code !== couponId);
+    setCouponsList(updated);
+    try {
+      localStorage.setItem("madhuram_coupons", JSON.stringify(updated));
+    } catch {}
   };
 
   useEffect(() => {
@@ -578,6 +700,13 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
           >
             <FaUsers /> Registered Clients ({totalClients})
           </button>
+          <button
+            type="button"
+            className={`tab-btn ${activeTab === "vouchers" ? "active" : ""}`}
+            onClick={() => setActiveTab("vouchers")}
+          >
+            <FaTicketAlt /> Vouchers & Coupons ({couponsList.length})
+          </button>
         </div>
 
         {/* Search & Filter Toolbar */}
@@ -818,6 +947,238 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
                 })}
               </div>
             )}
+          </div>
+        )}
+        {/* TAB 3: VOUCHERS & COUPONS MANAGEMENT */}
+        {activeTab === "vouchers" && (
+          <div className="vouchers-management-section" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {/* Create Coupon Form Card */}
+            <div className="admin-order-card" style={{ textAlign: "left" }}>
+              <h3 style={{ margin: "0 0 6px 0", color: "#d4a762", fontSize: "18px", display: "flex", alignItems: "center", gap: "8px" }}>
+                <FaTicketAlt /> Create & Issue Voucher / Coupon
+              </h3>
+              <p style={{ color: "#a1a1aa", fontSize: "13px", margin: "0 0 20px 0" }}>
+                Issue discount coupons for <strong>ALL Users</strong> or target a <strong>Specific Registered Client</strong>.
+              </p>
+
+              <form onSubmit={handleCreateCoupon} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div>
+                    <label style={{ fontSize: "12px", color: "#d4a762", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                      Coupon Code *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. WELCOME50, SUMMER20"
+                      value={newCouponForm.code}
+                      onChange={(e) => setNewCouponForm({ ...newCouponForm, code: e.target.value })}
+                      required
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.15)", background: "#1c1c21", color: "#fff" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", color: "#d4a762", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                      Discount Type
+                    </label>
+                    <select
+                      value={newCouponForm.discountType}
+                      onChange={(e) => setNewCouponForm({ ...newCouponForm, discountType: e.target.value })}
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.15)", background: "#1c1c21", color: "#fff" }}
+                    >
+                      <option value="percentage">Percentage Discount (%)</option>
+                      <option value="fixed">Fixed Amount Discount (₹)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div>
+                    <label style={{ fontSize: "12px", color: "#d4a762", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                      Discount Value ({newCouponForm.discountType === "fixed" ? "₹" : "%"}) *
+                    </label>
+                    <input
+                      type="number"
+                      placeholder={newCouponForm.discountType === "fixed" ? "e.g. 50 (for ₹50 OFF)" : "e.g. 20 (for 20% OFF)"}
+                      value={newCouponForm.discountValue}
+                      onChange={(e) => setNewCouponForm({ ...newCouponForm, discountValue: e.target.value })}
+                      required
+                      min="1"
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.15)", background: "#1c1c21", color: "#fff" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "12px", color: "#d4a762", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                      Min Order Value (₹)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 200"
+                      value={newCouponForm.minOrderAmount}
+                      onChange={(e) => setNewCouponForm({ ...newCouponForm, minOrderAmount: e.target.value })}
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.15)", background: "#1c1c21", color: "#fff" }}
+                    />
+                  </div>
+                </div>
+
+                {/* Target Audience */}
+                <div>
+                  <label style={{ fontSize: "12px", color: "#d4a762", fontWeight: "700", display: "block", marginBottom: "6px" }}>
+                    Target Audience (Who can use this coupon?)
+                  </label>
+                  <div style={{ display: "flex", gap: "16px", alignItems: "center", marginBottom: "8px" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", color: "#fff", fontSize: "13px" }}>
+                      <input
+                        type="radio"
+                        name="targetType"
+                        value="ALL"
+                        checked={newCouponForm.targetType === "ALL"}
+                        onChange={() => setNewCouponForm({ ...newCouponForm, targetType: "ALL" })}
+                      />
+                      🌐 All Users (Public Coupon)
+                    </label>
+
+                    <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", color: "#fff", fontSize: "13px" }}>
+                      <input
+                        type="radio"
+                        name="targetType"
+                        value="SPECIFIC"
+                        checked={newCouponForm.targetType === "SPECIFIC"}
+                        onChange={() => setNewCouponForm({ ...newCouponForm, targetType: "SPECIFIC" })}
+                      />
+                      👤 Specific Registered User
+                    </label>
+                  </div>
+
+                  {newCouponForm.targetType === "SPECIFIC" && (
+                    <div style={{ marginTop: "8px" }}>
+                      <input
+                        type="tel"
+                        placeholder="Enter Target User Mobile (e.g. 7000623626)"
+                        value={newCouponForm.targetMobile}
+                        onChange={(e) => setNewCouponForm({ ...newCouponForm, targetMobile: e.target.value })}
+                        required
+                        style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #d4a762", background: "#1c1c21", color: "#fff" }}
+                      />
+                      {clientsList.length > 0 && (
+                        <div style={{ marginTop: "6px", fontSize: "12px", color: "#a1a1aa" }}>
+                          Quick pick from registered clients:{" "}
+                          {clientsList.map((cl) => (
+                            <button
+                              key={cl.mobile}
+                              type="button"
+                              onClick={() => setNewCouponForm({ ...newCouponForm, targetMobile: cl.mobile })}
+                              style={{ background: "rgba(212,167,98,0.2)", color: "#d4a762", border: "none", padding: "2px 6px", borderRadius: "4px", margin: "2px", cursor: "pointer", fontSize: "11px" }}
+                            >
+                              {cl.fullName || cl.mobile} ({cl.mobile})
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "12px", color: "#d4a762", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                    Voucher Description / Banner Title
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 20% OFF on all delicious meals!"
+                    value={newCouponForm.description}
+                    onChange={(e) => setNewCouponForm({ ...newCouponForm, description: e.target.value })}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.15)", background: "#1c1c21", color: "#fff" }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={couponCreating}
+                  style={{
+                    background: "linear-gradient(135deg, #d4a762, #b8860b)",
+                    color: "#000",
+                    border: "none",
+                    padding: "12px",
+                    borderRadius: "10px",
+                    fontWeight: "800",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <FaPlus /> {couponCreating ? "Creating Voucher..." : "Issue Voucher / Coupon"}
+                </button>
+              </form>
+            </div>
+
+            {/* Issued Coupons List */}
+            <div style={{ textAlign: "left" }}>
+              <h3 style={{ margin: "0 0 14px 0", color: "#d4a762", fontSize: "16px", letterSpacing: "0.5px" }}>
+                ACTIVE ISSUED COUPONS ({couponsList.length})
+              </h3>
+
+              {couponsList.length === 0 ? (
+                <div className="empty-admin-card">
+                  <FaTicketAlt className="empty-icon" />
+                  <h3>No Active Vouchers</h3>
+                  <p>Use the form above to issue coupons for your users.</p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "12px" }}>
+                  {couponsList.map((c) => (
+                    <div key={c.id || c.code} className="admin-order-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "10px" }}>
+                      <div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                          <code style={{ background: "rgba(212,167,98,0.2)", color: "#d4a762", fontSize: "16px", fontWeight: "800", padding: "4px 10px", borderRadius: "6px" }}>
+                            {c.code}
+                          </code>
+                          <span className="status-badge-pill confirmed">
+                            {c.discountType === "fixed" ? `₹${c.discountValue} OFF` : `${c.discountValue}% OFF`}
+                          </span>
+                        </div>
+                        <p style={{ margin: "0 0 6px 0", fontSize: "13px", color: "#fff", fontWeight: "600" }}>
+                          {c.description || "Discount Coupon"}
+                        </p>
+                        <div style={{ fontSize: "12px", color: "#a1a1aa" }}>
+                          <p style={{ margin: "2px 0" }}>
+                            🎯 Target: <strong>{c.targetUser === "ALL" ? "🌐 All Users" : `👤 User ${c.targetUser}`}</strong>
+                          </p>
+                          <p style={{ margin: "2px 0" }}>
+                            📦 Min Order: <strong>₹{c.minOrderAmount || 0}</strong>
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCoupon(c.id || c.code)}
+                        style={{
+                          background: "rgba(239, 68, 68, 0.15)",
+                          color: "#f87171",
+                          border: "1px solid rgba(239, 68, 68, 0.3)",
+                          padding: "6px 12px",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: "700",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "4px",
+                        }}
+                      >
+                        <FaTrash /> Delete Voucher
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

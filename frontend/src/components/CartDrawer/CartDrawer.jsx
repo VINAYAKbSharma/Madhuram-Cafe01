@@ -11,14 +11,15 @@ function CartDrawer({
   onApplyCoupon,
   couponApplied,
   couponMessage,
+  appliedDiscount = 0,
   onCheckout,
   onBookTable,
   onHomeDelivery
 }) {
   const MIN_ORDER_AMOUNT = 200;
   const subtotal = cartItems.reduce((total, item) => total + item.price * item.qty, 0);
-  const discount = couponApplied ? Math.round(subtotal * 0.2) : 0;
-  const discountedSubtotal = subtotal - discount;
+  const discount = couponApplied ? (appliedDiscount || 0) : 0;
+  const discountedSubtotal = Math.max(0, subtotal - discount);
   const delivery = subtotal === 0 ? 0 : 20;
   const platformFee = subtotal > 0 ? 20 : 0;
   const total = discountedSubtotal + delivery + platformFee;

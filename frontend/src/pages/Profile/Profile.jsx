@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FaArrowLeft,
   FaMapMarkerAlt,
@@ -23,6 +23,8 @@ function Profile({ user, orders = [], onLogout, onBackHome, onUpdateUser, onNavi
   const [activeModal, setActiveModal] = useState(null); // null | 'address' | 'payment' | 'refunds' | 'vouchers'
   const [isSaving, setIsSaving] = useState(false);
   const [copiedCoupon, setCopiedCoupon] = useState("");
+  const [vouchersList, setVouchersList] = useState([]);
+  const [vouchersLoading, setVouchersLoading] = useState(false);
 
   const [editForm, setEditForm] = useState({
     fullName: user?.fullName || "",
@@ -33,6 +35,35 @@ function Profile({ user, orders = [], onLogout, onBackHome, onUpdateUser, onNavi
     city: user?.address?.city || "",
     pincode: user?.address?.pincode || "",
   });
+
+  // Dynamically load coupons for this user from backend API / localStorage backup
+  useEffect(() => {
+    const fetchVouchers = async () => {
+      setVouchersLoading(true);
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/coupons?mobile=${user?.mobile || ""}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.coupons)) {
+            setVouchersList(data.coupons);
+          }
+        }
+      } catch (err) {
+        console.warn("Error fetching vouchers:", err);
+        try {
+          const raw = localStorage.getItem("madhuram_coupons");
+          const all = raw ? JSON.parse(raw) : [];
+          setVouchersList(
+            all.filter((c) => c.active !== false && (c.targetUser === "ALL" || c.targetUser === user?.mobile))
+          );
+        } catch {}
+      } finally {
+        setVouchersLoading(false);
+      }
+    };
+
+    fetchVouchers();
+  }, [user, activeModal]);
 
   const handleChange = (e) => {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
@@ -140,21 +171,21 @@ function Profile({ user, orders = [], onLogout, onBackHome, onUpdateUser, onNavi
 
         {/* Content Body */}
         <div className="profile-content-body">
-          {/* Promo / Referral Banner Card */}
+          {/* Promo / Rewards Banner Card */}
           <div className="referral-promo-card">
             <div className="promo-left-details">
               <div className="promo-title-row">
                 <FaGift className="promo-gift-icon" />
-                <span className="promo-main-title">Refer and Win</span>
-                <span className="promo-new-tag">NEW</span>
+                <span className="promo-main-title">Special Offers</span>
+                <span className="promo-new-tag">OFFERS</span>
               </div>
-              <p className="promo-subtext">Refer friends and earn upto ₹500 discount vouchers!</p>
+              <p className="promo-subtext">View active coupons & discount vouchers created for you!</p>
             </div>
             <button
               className="promo-action-btn"
               onClick={() => setActiveModal("vouchers")}
             >
-              View Offers
+              View Vouchers ({vouchersList.length})
             </button>
           </div>
 
@@ -432,7 +463,7 @@ function Profile({ user, orders = [], onLogout, onBackHome, onUpdateUser, onNavi
           </div>
         )}
 
-        {/* 4. MY VOUCHERS MODAL */}
+        {/* 4. MY VOUCHERS MODAL (DYNAMIC FROM BACKEND / ADMIN) */}
         {activeModal === "vouchers" && (
           <div className="modal-backdrop-overlay" onClick={() => setActiveModal(null)}>
             <div className="modal-dialog-box" onClick={(e) => e.stopPropagation()}>
@@ -444,31 +475,45 @@ function Profile({ user, orders = [], onLogout, onBackHome, onUpdateUser, onNavi
               </div>
 
               <div className="modal-body-content">
-                <p style={{ color: "#cbd5e1", fontSize: "14px", marginBottom: "14px" }}>
-                  Use these exclusive coupon codes at checkout for instant discounts!
-                </p>
-
-                <div className="vouchers-list">
-                  {[
-                    { code: "WELCOME20", title: "Flat 20% OFF", desc: "Valid on all orders above ₹200" },
-                    { code: "MADHURAM20", title: "Special Cafe Discount", desc: "Enjoy 20% savings on beverages & snacks" },
-                    { code: "OFF20", title: "Festive Special", desc: "Unlock 20% instant cashback on checkout" },
-                  ].map((v) => (
-                    <div className="voucher-card" key={v.code}>
-                      <div className="voucher-info">
-                        <span className="voucher-title">{v.title}</span>
-                        <code className="voucher-code-badge">{v.code}</code>
-                        <p className="voucher-desc">{v.desc}</p>
+                {vouchersLoading ? (
+                  <p style={{ color: "#a1a1aa", padding: "10px" }}>Loading your available vouchers...</p>
+                ) : vouchersList.length === 0 ? (
+                  <div className="no-past-orders-box" style={{ padding: "24px 16px" }}>
+                    <FaTicketAlt style={{ fontSize: "36px", color: "#3f3f46", marginBottom: "8px" }} />
+                    <p style={{ color: "#a1a1aa", fontSize: "14px", margin: 0 }}>
+                      No active vouchers or coupons available currently.
+                    </p>
+                    <p style={{ color: "#71717a", fontSize: "12px", marginTop: "4px" }}>
+                      Admin can issue custom vouchers & coupons for you anytime!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="vouchers-list">
+                    {vouchersList.map((v) => (
+                      <div className="voucher-card" key={v.id || v.code}>
+                        <div className="voucher-info">
+                          <span className="voucher-title">{v.description || `${v.code} Voucher`}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", margin: "4px 0" }}>
+                            <code className="voucher-code-badge">{v.code}</code>
+                            <span style={{ fontSize: "10px", background: "rgba(34, 197, 94, 0.2)", color: "#4ade80", padding: "2px 6px", borderRadius: "4px", fontWeight: "700" }}>
+                              {v.discountType === "fixed" ? `₹${v.discountValue} OFF` : `${v.discountValue}% OFF`}
+                            </span>
+                          </div>
+                          <p className="voucher-desc">
+                            {v.minOrderAmount > 0 ? `Min Order: ₹${v.minOrderAmount}` : "No minimum order limit"}
+                            {v.targetUser !== "ALL" ? ` • Exclusive for your account` : ""}
+                          </p>
+                        </div>
+                        <button
+                          className="copy-coupon-btn"
+                          onClick={() => handleCopyCode(v.code)}
+                        >
+                          <FaCopy /> {copiedCoupon === v.code ? "Copied!" : "Copy Code"}
+                        </button>
                       </div>
-                      <button
-                        className="copy-coupon-btn"
-                        onClick={() => handleCopyCode(v.code)}
-                      >
-                        <FaCopy /> {copiedCoupon === v.code ? "Copied!" : "Copy Code"}
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
