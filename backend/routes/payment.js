@@ -11,11 +11,10 @@ const getActiveKeys = () => {
   let key_id = process.env.RAZORPAY_KEY_ID;
   let key_secret = process.env.RAZORPAY_KEY_SECRET;
 
-  // Ignore missing or stale expired test keys from legacy Vercel env vars
+  // Ignore missing or any test keys from Render / Vercel env vars
   if (
     !key_id ||
-    key_id.includes("TZWHwkttPmgYUN") ||
-    key_id.includes("TZV0qidx0ebyke") ||
+    key_id.startsWith("rzp_test_") ||
     key_id.includes("xxxx")
   ) {
     key_id = "rzp_live_TZZBu3G1koYPd6";
@@ -23,9 +22,10 @@ const getActiveKeys = () => {
 
   if (
     !key_secret ||
-    key_secret.includes("Owdg6nm8pGPsTJfLwwXDbCx5") ||
-    key_secret.includes("W13hrfhOO7IGRcmLj0YnaFLd") ||
-    key_secret.includes("xxxx")
+    key_secret.length < 15 ||
+    key_secret.includes("xxxx") ||
+    key_secret === "Owdg6nm8pGPsTJfLwwXDbCx5" ||
+    key_secret === "W13hrfhOO7IGRcmLj0YnaFLd"
   ) {
     key_secret = "i7PZ1ucMYisVOPpj2jP805xX";
   }
