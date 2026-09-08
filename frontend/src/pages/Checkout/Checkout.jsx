@@ -352,9 +352,14 @@ Platform Fee : ₹${platformFee}
                   </div>
                   <span className="recommended-tag">Secured</span>
                 </label>
+
+                <div className="razorpay-hint-box" style={{ marginTop: "10px" }}>
+                  💡 <strong>Test Mode Note:</strong> Enter test UPI ID <code>success@razorpay</code> inside the Razorpay popup to test instant UPI payments. <em>(Real PhonePe / GPay apps reject test QR codes because they only send real money to Live Mode keys <code>rzp_live_...</code> linked to a bank account).</em>
+                </div>
               </div>
             </div>
           </div>
+
 
           <div className="order-summary-card">
             <h3>Order Summary</h3>
