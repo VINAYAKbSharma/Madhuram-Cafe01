@@ -16,11 +16,12 @@ function SplashScreen({ onFinish }) {
     // Play splash audio automatically
     const playAudio = () => {
       if (audioRef.current) {
-        audioRef.current.play().catch((err) => {
-          console.warn("Autoplay blocked by browser, awaiting interaction:", err);
+        audioRef.current.play().catch(() => {
+          // Autoplay policy prevented playback until user interaction; unlocked on first click/touch
         });
       }
     };
+
 
     playAudio();
 
