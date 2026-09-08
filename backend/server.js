@@ -51,6 +51,11 @@ app.use("/assets", (req, res) => {
   res.status(404).type("text/plain").send("Asset not found");
 });
 
+// Never return index.html for missing JS/CSS/image files
+app.get(/\.(js|css|json|map|png|jpg|jpeg|svg|ico|jfif|mpeg)$/i, (req, res) => {
+  res.status(404).type("text/plain").send("Asset not found");
+});
+
 // Fallback all unknown GET routes to frontend SPA index.html
 app.get("*", (req, res) => {
   const indexPath = path.join(distPath, "index.html");
