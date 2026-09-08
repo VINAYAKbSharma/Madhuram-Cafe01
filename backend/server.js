@@ -29,7 +29,8 @@ app.use("/api", paymentRouter);
 
 
 
-const distPath = path.join(__dirname, "../frontend/dist");
+const distPath = path.resolve(__dirname, "../frontend/dist");
+const rootDistPath = path.resolve(process.cwd(), "frontend/dist");
 
 app.get("/health", (req, res) => {
   res.json({
@@ -43,22 +44,23 @@ app.all("/api/*", (req, res) => {
   res.status(404).json({ success: false, message: "API endpoint not found" });
 });
 
-// Serve static files from frontend build
+// Serve static files from frontend build (checking both distPath & rootDistPath)
 app.use(express.static(distPath));
+app.use(express.static(rootDistPath));
+app.use("/assets", express.static(path.join(distPath, "assets")));
+app.use("/assets", express.static(path.join(rootDistPath, "assets")));
 
-// Don't fall through to index.html for missing static assets (prevents browser MIME type errors)
-app.use("/assets", (req, res) => {
-  res.status(404).type("text/plain").send("Asset not found");
-});
-
-// Never return index.html for missing JS/CSS/image files
+// Never return index.html for missing JS/CSS/image files (prevents browser MIME type errors)
 app.get(/\.(js|css|json|map|png|jpg|jpeg|svg|ico|jfif|mpeg)$/i, (req, res) => {
   res.status(404).type("text/plain").send("Asset not found");
 });
 
 // Fallback all unknown GET routes to frontend SPA index.html
 app.get("*", (req, res) => {
-  const indexPath = path.join(distPath, "index.html");
+  const indexPath = fs.existsSync(path.join(distPath, "index.html"))
+    ? path.join(distPath, "index.html")
+    : path.join(rootDistPath, "index.html");
+
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
