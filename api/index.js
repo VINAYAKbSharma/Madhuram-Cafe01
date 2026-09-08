@@ -5,6 +5,7 @@ import { connectDB } from "../backend/config/db.js";
 import authRouter from "../backend/routes/auth.js";
 import ordersRouter from "../backend/routes/orders.js";
 import paymentRouter from "../backend/routes/payment.js";
+import woocommerceRouter from "../backend/routes/woocommerce.js";
 
 dotenv.config();
 
@@ -17,7 +18,9 @@ app.use(express.json());
 app.use("/api/auth", authRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/payment", paymentRouter);
+app.use("/api/woocommerce", woocommerceRouter);
 app.use("/api", paymentRouter);
+
 
 app.get("/api/health", (req, res) => {
   res.json({

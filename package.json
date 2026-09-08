@@ -16,7 +16,9 @@
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.14.0",
-    "razorpay": "^2.9.6"
+    "razorpay": "^2.9.6",
+    "@woocommerce/woocommerce-rest-api": "^1.0.1"
   }
+
 
 }

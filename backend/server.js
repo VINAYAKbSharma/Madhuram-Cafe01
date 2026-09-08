@@ -6,6 +6,7 @@ import { connectDB } from "./config/db.js";
 import authRouter from "./routes/auth.js";
 import ordersRouter from "./routes/orders.js";
 import paymentRouter from "./routes/payment.js";
+import woocommerceRouter from "./routes/woocommerce.js";
 import cors from "cors";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,7 +23,9 @@ app.use(express.json());
 app.use("/api/auth", authRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/payment", paymentRouter);
+app.use("/api/woocommerce", woocommerceRouter);
 app.use("/api", paymentRouter);
+
 
 
 
