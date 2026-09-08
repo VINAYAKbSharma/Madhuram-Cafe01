@@ -8,8 +8,8 @@ dotenv.config();
 const router = express.Router();
 
 const getRazorpayInstance = () => {
-  const key_id = process.env.RAZORPAY_KEY_ID || "rzp_test_TZWHwkttPmgYUN";
-  const key_secret = process.env.RAZORPAY_KEY_SECRET || "Owdg6nm8pGPsTJfLwwXDbCx5";
+  const key_id = process.env.RAZORPAY_KEY_ID || "rzp_live_TZZBu3G1koYPd6";
+  const key_secret = process.env.RAZORPAY_KEY_SECRET || "i7PZ1ucMYisVOPpj2jP805xX";
 
   return new Razorpay({
     key_id,
@@ -19,7 +19,7 @@ const getRazorpayInstance = () => {
 
 // GET /api/payment/key - Expose public key ID for frontend integration
 router.get("/key", (req, res) => {
-  const keyId = process.env.RAZORPAY_KEY_ID || "rzp_test_TZWHwkttPmgYUN";
+  const keyId = process.env.RAZORPAY_KEY_ID || "rzp_live_TZZBu3G1koYPd6";
   return res.json({ success: true, key: keyId });
 });
 
@@ -65,20 +65,20 @@ const handleCreateOrder = async (req, res) => {
       order,
       amount: order.amount,
       currency: order.currency,
-      key: process.env.RAZORPAY_KEY_ID || "rzp_test_TZWHwkttPmgYUN",
+      key: process.env.RAZORPAY_KEY_ID || "rzp_live_TZZBu3G1koYPd6",
     });
   } catch (error) {
     console.error("Razorpay order creation error:", error);
-    const statusCode = error.statusCode || error.status || 500;
-    if (statusCode === 401) {
-      return res.status(401).json({
-        success: false,
-        message: "Razorpay authentication failed. Invalid API Keys.",
-      });
-    }
-    return res.status(500).json({
+    const rzpDescription =
+      error?.error?.description ||
+      error?.message ||
+      "Failed to create Razorpay order";
+    const statusCode = error?.statusCode || error?.status || 400;
+
+    return res.status(statusCode).json({
       success: false,
-      message: error.message || "Failed to create Razorpay order",
+      message: rzpDescription,
+      errorDetails: error?.error || null,
     });
   }
 };
@@ -97,7 +97,7 @@ const handleVerifyPayment = async (req, res) => {
       });
     }
 
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || "Owdg6nm8pGPsTJfLwwXDbCx5";
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || "i7PZ1ucMYisVOPpj2jP805xX";
 
     const hmac = crypto.createHmac("sha256", keySecret);
     hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);

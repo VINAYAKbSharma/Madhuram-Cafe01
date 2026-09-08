@@ -48,7 +48,40 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
       return;
     }
 
+    setIsProcessingPayment(true);
+
+    // 1. Load Razorpay SDK script dynamically
+    const isScriptLoaded = await loadRazorpayScript();
+    if (!isScriptLoaded) {
+      alert("Failed to load Razorpay SDK. Please check your internet connection.");
+      setIsProcessingPayment(false);
+      return;
+    }
+
     const targetId = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // 2. Create Razorpay order via backend endpoint
+    let rzpOrderData = null;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/payment/create-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: total,
+          receipt: `rcpt_${targetId}`,
+        }),
+      });
+
+      rzpOrderData = await res.json();
+      if (!rzpOrderData.success) {
+        throw new Error(rzpOrderData.message || "Could not initialize payment order");
+      }
+    } catch (err) {
+      console.error("Order Creation Error:", err);
+      alert(`Payment Initialization Failed: ${err.message}`);
+      setIsProcessingPayment(false);
+      return;
+    }
 
     const orderItems = cartItems
       .map(
@@ -87,7 +120,7 @@ Platform Fee : ₹${platformFee}
 
 💰 *Grand Total : ₹${total}*
 
-💳 Payment Method : ${formData.payment}
+💳 Payment Method : Razorpay Gateway
 `;
 
     const cafeNumber = "919691634045";
@@ -95,147 +128,117 @@ Platform Fee : ₹${platformFee}
       message
     )}`;
 
-    const newOrderBase = {
-      id: targetId,
-      orderId: targetId,
-      date: new Date().toLocaleString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      items: cartItems.map((item) => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        qty: item.qty,
-        image: item.image,
-      })),
-      subtotal,
-      deliveryCharge,
-      platformFee,
-      total,
-      address: `${formData.house}, ${formData.street}, ${
-        formData.landmark ? formData.landmark + ", " : ""
-      }${formData.city} - ${formData.pincode}`,
-      customer: {
-        fullName: formData.fullName,
-        mobile: formData.mobile,
+    // 3. Open Razorpay modal with locked amount & order_id
+    const options = {
+      key: rzpOrderData.key || "rzp_live_TZZBu3G1koYPd6",
+      amount: rzpOrderData.amount, // in paise (e.g. ₹340 -> 34000 paise)
+      currency: rzpOrderData.currency || "INR",
+      name: "Madhuram Cafe",
+      description: `Food Order #${targetId} - ₹${total}`,
+      image: "https://cdn-icons-png.flaticon.com/512/3081/3081559.png",
+      order_id: rzpOrderData.order_id || rzpOrderData.order?.id,
+      handler: async function (response) {
+        // Payment successful - verify payment signature on backend
+        try {
+          const verifyRes = await fetch(`${API_BASE_URL}/api/payment/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+          const verifyData = await verifyRes.json();
+
+          if (!verifyData.success) {
+            alert("Payment signature verification failed! Order not placed.");
+            setIsProcessingPayment(false);
+            return;
+          }
+
+          // Payment verified successfully! Create and list the order
+          const confirmedOrder = {
+            id: targetId,
+            orderId: targetId,
+            date: new Date().toLocaleString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            items: cartItems.map((item) => ({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              qty: item.qty,
+              image: item.image,
+            })),
+            subtotal,
+            deliveryCharge,
+            platformFee,
+            total,
+            address: `${formData.house}, ${formData.street}, ${
+              formData.landmark ? formData.landmark + ", " : ""
+            }${formData.city} - ${formData.pincode}`,
+            customer: {
+              fullName: formData.fullName,
+              mobile: formData.mobile,
+            },
+            userMobile: formData.mobile,
+            status: "Confirmed",
+            deliveryMessage: "Deliver in 15 to 20 minute",
+            payment: "Razorpay Gateway",
+            transactionId: response.razorpay_payment_id,
+            razorpayOrderId: response.razorpay_order_id,
+            paymentStatus: "Paid",
+          };
+
+          // Dispatch custom event locally
+          try {
+            window.dispatchEvent(
+              new CustomEvent("madhuram_new_order", { detail: confirmedOrder })
+            );
+          } catch (e) {}
+
+          // Place order and navigate to Orders
+          if (onPlaceOrder) {
+            await onPlaceOrder(confirmedOrder, whatsappURL);
+          } else {
+            window.open(whatsappURL, "_blank");
+          }
+        } catch (vErr) {
+          console.error("Verification Error:", vErr);
+          alert("Error verifying payment. Please contact cafe support.");
+        } finally {
+          setIsProcessingPayment(false);
+        }
       },
-      status: "Confirmed",
-      deliveryMessage: "Deliver in 15 to 20 minute",
+      prefill: {
+        name: formData.fullName,
+        contact: formData.mobile,
+      },
+      theme: {
+        color: "#e63946",
+      },
+      modal: {
+        ondismiss: function () {
+          setIsProcessingPayment(false);
+        },
+      },
     };
 
-
-    // RAZORPAY PAYMENT GATEWAY ONLY
-    setIsProcessingPayment(true);
-
     try {
-      const isLoaded = await loadRazorpayScript();
-      if (!isLoaded) {
-        alert("Failed to load Razorpay Payment Gateway. Check internet connection.");
-        setIsProcessingPayment(false);
-        return;
-      }
-
-      const res = await fetch(`${API_BASE_URL}/api/payment/create-order`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: total,
-          receipt: targetId,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success || !data.order) {
-        alert(`Failed to initialize payment: ${data.message || "Server Error"}`);
-        setIsProcessingPayment(false);
-        return;
-      }
-
-      const { order, key } = data;
-
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || key || "rzp_test_TZWHwkttPmgYUN",
-        amount: order.amount,
-        currency: order.currency || "INR",
-        name: "Madhuram Cafe",
-        description: `Food Order #${targetId}`,
-        order_id: order.id,
-        prefill: {
-          name: formData.fullName || "Customer",
-          contact: formData.mobile || "",
-          email: currentUser?.email || `${formData.mobile || "customer"}@madhuramcafe.com`,
-        },
-        theme: {
-          color: "#ff6b00",
-        },
-        handler: async function (response) {
-          try {
-            const verifyRes = await fetch(`${API_BASE_URL}/api/payment/verify`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            });
-
-            const verifyData = await verifyRes.json();
-
-            if (verifyData.success) {
-              const paidOrder = {
-                ...newOrderBase,
-                status: "Confirmed",
-                deliveryMessage: "Deliver in 15 to 20 minute",
-                payment: "Razorpay Gateway (Paid)",
-                transactionId: response.razorpay_payment_id,
-                razorpayOrderId: response.razorpay_order_id,
-                paymentStatus: "Paid",
-              };
-
-
-              try {
-                window.dispatchEvent(
-                  new CustomEvent("madhuram_new_order", { detail: paidOrder })
-                );
-              } catch (e) {}
-
-              if (onPlaceOrder) {
-                onPlaceOrder(paidOrder, whatsappURL);
-              } else {
-                window.open(whatsappURL, "_blank");
-              }
-            } else {
-              alert(`Payment Verification Failed: ${verifyData.message}`);
-            }
-          } catch (verifyErr) {
-            console.error("Verification error:", verifyErr);
-            alert("Error verifying payment signature. Please try again.");
-          } finally {
-            setIsProcessingPayment(false);
-          }
-        },
-        modal: {
-          ondismiss: function () {
-            setIsProcessingPayment(false);
-          },
-        },
-      };
-
       const rzp = new window.Razorpay(options);
       rzp.on("payment.failed", function (response) {
-        alert(`Payment Failed: ${response.error.description}`);
+        alert(`Payment Failed: ${response.error.description || "Transaction failed"}`);
         setIsProcessingPayment(false);
       });
       rzp.open();
     } catch (err) {
-      console.error("Razorpay payment initialization error:", err);
-      alert("Payment gateway error. Please try again.");
+      console.error("Razorpay Modal Error:", err);
+      alert("Failed to open Razorpay checkout modal.");
       setIsProcessingPayment(false);
     }
   };
@@ -335,7 +338,6 @@ Platform Fee : ₹${platformFee}
 
             <div className="payment-options-wrapper">
               <div className="payment-options">
-                {/* RAZORPAY PAYMENT GATEWAY ONLY */}
                 <label className="payment-option-label selected">
                   <div className="payment-option-content">
                     <input
@@ -346,20 +348,19 @@ Platform Fee : ₹${platformFee}
                       readOnly
                     />
                     <div className="payment-title-group">
-                      <span className="payment-main-title">💳 Razorpay Gateway (UPI / GPay / PhonePe / Cards)</span>
-                      <span className="payment-subtitle">Pay securely via Google Pay, PhonePe, Paytm, Cards, Netbanking</span>
+                      <span className="payment-main-title">💳 Pay via Razorpay Gateway</span>
+                      <span className="payment-subtitle">UPI, GPay, PhonePe, Paytm, BHIM, Cards & Netbanking</span>
                     </div>
                   </div>
-                  <span className="recommended-tag">Secured</span>
+                  <span className="recommended-tag">Verified Merchant</span>
                 </label>
 
                 <div className="razorpay-hint-box" style={{ marginTop: "10px" }}>
-                  💡 <strong>Test Mode Note:</strong> Enter test UPI ID <code>success@razorpay</code> inside the Razorpay popup to test instant UPI payments. <em>(Real PhonePe / GPay apps reject test QR codes because they only send real money to Live Mode keys <code>rzp_live_...</code> linked to a bank account).</em>
+                  🔒 <strong>Auto-Set Locked Amount:</strong> ₹{total} will be pre-filled automatically in the payment gateway modal. Order is confirmed only after successful payment.
                 </div>
               </div>
             </div>
           </div>
-
 
           <div className="order-summary-card">
             <h3>Order Summary</h3>
