@@ -46,6 +46,11 @@ app.all("/api/*", (req, res) => {
 // Serve static files from frontend build
 app.use(express.static(distPath));
 
+// Don't fall through to index.html for missing static assets (prevents browser MIME type errors)
+app.use("/assets", (req, res) => {
+  res.status(404).type("text/plain").send("Asset not found");
+});
+
 // Fallback all unknown GET routes to frontend SPA index.html
 app.get("*", (req, res) => {
   const indexPath = path.join(distPath, "index.html");
