@@ -747,6 +747,7 @@ function App() {
           {showProfile && currentUser && (
             <Profile
               user={currentUser}
+              orders={orders}
               onLogout={handleLogout}
               onUpdateUser={(updatedUser) => {
                 setCurrentUser(updatedUser);
@@ -759,6 +760,12 @@ function App() {
               onBackHome={() => {
                 setShowProfile(false);
                 setActiveTab("home");
+                setShowFooter(true);
+              }}
+              onNavigateOrders={() => {
+                setShowProfile(false);
+                setShowOrders(true);
+                setActiveTab("orders");
                 setShowFooter(true);
               }}
             />
