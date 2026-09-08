@@ -327,7 +327,9 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
         method: "DELETE",
       }).catch((err) => console.warn("Backend clear orders warning:", err));
 
-      // 2. Clear global orders list in localStorage
+      // 2. Set deletion flags & clear global orders list in localStorage
+      localStorage.setItem("madhuram_all_orders_deleted", "true");
+      localStorage.setItem("madhuram_all_deleted_timestamp", String(Date.now()));
       localStorage.setItem("madhuram_orders", JSON.stringify([]));
       setOrdersList([]);
 
@@ -335,11 +337,16 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith("madhuram_orders_")) {
+        if (key && (key.startsWith("madhuram_orders_") || key.includes("deleted_order"))) {
           keysToRemove.push(key);
         }
       }
       keysToRemove.forEach((k) => localStorage.removeItem(k));
+
+      // 4. Dispatch custom event for real-time UI updates across all components
+      try {
+        window.dispatchEvent(new CustomEvent("madhuram_all_orders_deleted"));
+      } catch (e) {}
 
       setNewOrderAlert(null);
       onOrdersUpdated && onOrdersUpdated();
