@@ -37,7 +37,7 @@ ${menuItems}
 --------------------------------
 
 Subtotal : ₹${subtotal}
-Platform Fee : ₹${platformFee}
+Platform & Packaging Fee : ₹${platformFee}
 
 💰 *Estimated Total : ₹${total}*
 `
@@ -190,7 +190,7 @@ ${menuSection}
                 <span>₹{subtotal}</span>
               </div>
               <div className="menu-preview-item">
-                <span>Platform Fee</span>
+                <span>Platform & Packaging Fee</span>
                 <span>₹{platformFee}</span>
               </div>
               <hr />

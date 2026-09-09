@@ -82,7 +82,7 @@ const categoryData = [
     id: 13,
     name: "Snacks",
     image: snacks,
-    items: "9 Items"
+    items: "10 Items"
   }
 ];
 

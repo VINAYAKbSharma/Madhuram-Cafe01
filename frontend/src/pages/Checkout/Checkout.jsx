@@ -105,7 +105,7 @@ ${orderItems}
 
 Subtotal : ₹${subtotal}
 Delivery : ₹${deliveryCharge}
-Platform Fee : ₹${platformFee}
+Platform & Packaging Fee : ₹${platformFee}
 
 💰 *Grand Total : ₹${total}*
 
@@ -420,7 +420,7 @@ Platform Fee : ₹${platformFee}
               </div>
 
               <div className="summary-item">
-                <span>Platform Fee</span>
+                <span>Platform & Packaging Fee</span>
                 <strong>₹{platformFee}</strong>
               </div>
 

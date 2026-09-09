@@ -47,7 +47,7 @@ const chinese = [
   { id: "chinese_3", name: "Veg Hakka Noodles", price: 100, preparationTime: "12 mins", available: true },
   { id: "chinese_4", name: "Schezwan Rice", price: 100, preparationTime: "12 mins", available: true },
   { id: "chinese_5", name: "Gravy Manchurian", price: 110, preparationTime: "15 mins", available: true },
-  { id: "chinese_6", name: "Red Sauce Pasta", price: 90, preparationTime: "15 mins", available: true },
+  { id: "chinese_6", name: "Red Sauce Pasta", price: 100, preparationTime: "15 mins", available: true },
   { id: "chinese_7", name: "White Sauce Pasta", price: 120, preparationTime: "15 mins", available: true },
   { id: "chinese_8", name: "Schezwan Noodles", price: 110, preparationTime: "12 mins", available: true },
   { id: "chinese_9", name: "Singapore Noodles", price: 120, preparationTime: "15 mins", available: true },
@@ -107,10 +107,11 @@ const snacks = [
   { id: "snack_3", name: "Butter Cheese Meggi", price: 80, preparationTime: "10 mins", available: true },
   { id: "snack_4", name: "French Fries", price: 80, preparationTime: "10 mins", available: true },
   { id: "snack_5", name: "Peri Peri French Fries", price: 90, preparationTime: "10 mins", available: true },
-  { id: "snack_6", name: "Honey Chilli Potato", price: 120, preparationTime: "15 mins", available: true },
-  { id: "snack_7", name: "Pav Bhaji", price: 100, preparationTime: "15 mins", available: true },
-  { id: "snack_8", name: "Butter Cheese Pav Bhaji", price: 120, preparationTime: "15 mins", available: true },
-  { id: "snack_9", name: "Extra Pav (2 Pcs)", price: 30, preparationTime: "5 mins", available: true },
+  { id: "snack_6", name: "Masala Fries", price: 90, preparationTime: "10 mins", available: true },
+  { id: "snack_7", name: "Honey Chilli Potato", price: 120, preparationTime: "15 mins", available: true },
+  { id: "snack_8", name: "Pav Bhaji", price: 100, preparationTime: "15 mins", available: true },
+  { id: "snack_9", name: "Butter Cheese Pav Bhaji", price: 120, preparationTime: "15 mins", available: true },
+  { id: "snack_10", name: "Extra Pav (2 Pcs)", price: 30, preparationTime: "5 mins", available: true },
 ];
 
 function CategorySection({ title, items, onAddToCart }) {

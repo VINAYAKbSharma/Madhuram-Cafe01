@@ -123,7 +123,7 @@ function CartDrawer({
             <b>₹{delivery}</b>
           </div>
           <div>
-            <span>Platform Fee</span>
+            <span>Platform & Packaging Fee</span>
             <b>₹{platformFee}</b>
           </div>
           <hr />
