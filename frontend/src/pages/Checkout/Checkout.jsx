@@ -112,8 +112,12 @@ Platform & Packaging Fee : ₹${platformFee}
 💳 Payment Method : Razorpay Gateway
 `;
 
-    const cafeNumber = "919691634045";
-    const whatsappURL = `https://wa.me/${cafeNumber}?text=${encodeURIComponent(
+    const senderNumber = "919713330116";
+    const clientNumber = "919691634045";
+    const whatsappURL = `https://wa.me/${senderNumber}?text=${encodeURIComponent(
+      message
+    )}`;
+    const whatsappClientURL = `https://wa.me/${clientNumber}?text=${encodeURIComponent(
       message
     )}`;
 
@@ -222,9 +226,10 @@ Platform & Packaging Fee : ₹${platformFee}
 
           // Place order and navigate to Orders
           if (onPlaceOrder) {
-            await onPlaceOrder(confirmedOrder, whatsappURL);
+            await onPlaceOrder(confirmedOrder, whatsappURL, whatsappClientURL);
           } else {
             window.open(whatsappURL, "_blank");
+            if (whatsappClientURL) window.open(whatsappClientURL, "_blank");
           }
         } catch (vErr) {
           console.error("Verification Error:", vErr);

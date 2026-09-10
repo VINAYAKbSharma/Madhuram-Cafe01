@@ -42,14 +42,55 @@ const saveOrdersToDisk = (orders) => {
 // Fallback in-memory store for orders if MongoDB is offline (initialized from disk)
 const inMemoryOrders = loadOrdersFromDisk();
 
+// Helper to format WhatsApp message & URLs for numbers 9713330116 and 9691634045
+const generateWhatsAppUrls = (order) => {
+  if (!order) return {};
+  const itemsText = order.items && order.items.length > 0
+    ? order.items.map((item) => `• ${item.name} x ${item.qty} (₹${item.price * item.qty})`).join("\n")
+    : "No items listed";
+
+  const message = `🍽 *MADHURAM CAFE - NEW ORDER CONFIRMED!*
+
+🆔 *Order ID:* #${order.id || order.orderId}
+📅 *Date:* ${order.date || ""}
+
+👤 *Customer Details:*
+• Name: ${order.customer?.fullName || "Guest Customer"}
+• Mobile: ${order.customer?.mobile || order.userMobile || "N/A"}
+
+📍 *Delivery Address:*
+${order.address || "N/A"}
+
+🛒 *Order Items:*
+${itemsText}
+
+--------------------------------
+💰 *Grand Total:* ₹${order.total || 0}
+💳 *Payment:* ${order.payment || "Cash on Delivery"}${order.transactionId ? ` (Txn: ${order.transactionId})` : ""}
+--------------------------------`;
+
+  const encodedMsg = encodeURIComponent(message);
+  return {
+    senderNumberUrl: `https://wa.me/919713330116?text=${encodedMsg}`,
+    clientNumberUrl: `https://wa.me/919691634045?text=${encodedMsg}`,
+    customerUrl: (order.customer?.mobile || order.userMobile)
+      ? `https://wa.me/91${(order.customer?.mobile || order.userMobile).replace(/\D/g, "")}?text=${encodedMsg}`
+      : null,
+    messageText: message,
+  };
+};
+
 // Helper to format order for response
 const formatOrder = (doc) => {
   if (!doc) return null;
   const obj = doc.toObject ? doc.toObject() : doc;
-  return {
+  const id = obj.orderId || obj.id || obj._id;
+  const formatted = {
     ...obj,
-    id: obj.orderId || obj.id || obj._id,
+    id,
   };
+  formatted.whatsappUrls = generateWhatsAppUrls(formatted);
+  return formatted;
 };
 
 // POST /api/orders - Create a new order
@@ -94,6 +135,7 @@ router.post("/", async (req, res) => {
       status: status || "Confirmed",
       deliveryMessage: deliveryMessage || "Deliver in 15 to 20 minute",
     };
+    newOrderData.whatsappUrls = generateWhatsAppUrls(newOrderData);
 
 
     // Save to in-memory store first

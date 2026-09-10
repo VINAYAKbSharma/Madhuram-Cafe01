@@ -427,7 +427,7 @@ function App() {
     setShowFooter(true);
   };
 
-  const handlePlaceOrder = async (newOrder, whatsappURL) => {
+  const handlePlaceOrder = async (newOrder, whatsappURL, whatsappClientURL) => {
     try {
       localStorage.setItem("madhuram_all_orders_deleted", "false");
     } catch {}
@@ -520,7 +520,8 @@ function App() {
     setCartItems([]);
 
     // Open WhatsApp URL after network request completes
-    window.open(whatsappURL, "_blank");
+    if (whatsappURL) window.open(whatsappURL, "_blank");
+    if (whatsappClientURL) window.open(whatsappClientURL, "_blank");
 
     // Navigate user directly to Orders Section
     setShowCheckout(false);
