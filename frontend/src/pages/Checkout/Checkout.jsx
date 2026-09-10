@@ -14,7 +14,7 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
     landmark: savedAddr.landmark || "",
     city: savedAddr.city || "",
     pincode: savedAddr.pincode || "",
-    payment: "Razorpay Gateway",
+    payment: "COD",
   });
 
   const [isEditingAddress, setIsEditingAddress] = useState(
@@ -120,6 +120,58 @@ Platform & Packaging Fee : ₹${platformFee}
     const whatsappClientURL = `https://wa.me/${clientNumber}?text=${encodeURIComponent(
       message
     )}`;
+
+    // If Cash on Delivery / Test Order is selected, place order immediately without online payment
+    if (formData.payment === "COD") {
+      const confirmedOrder = {
+        id: targetId,
+        orderId: targetId,
+        date: new Date().toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        items: cartItems.map((item) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          qty: item.qty,
+          image: item.image,
+        })),
+        subtotal,
+        deliveryCharge,
+        platformFee,
+        total,
+        address: formattedAddressText,
+        customer: {
+          fullName: formData.fullName,
+          mobile: formData.mobile,
+        },
+        userMobile: formData.mobile,
+        status: "Pending",
+        deliveryMessage: "Pending Admin Confirmation",
+        payment: "Cash on Delivery (Test Order)",
+        transactionId: `COD_TEST_${targetId}`,
+        paymentStatus: "Pending",
+      };
+
+      try {
+        window.dispatchEvent(
+          new CustomEvent("madhuram_new_order", { detail: confirmedOrder })
+        );
+      } catch (e) {}
+
+      if (onPlaceOrder) {
+        await onPlaceOrder(confirmedOrder, whatsappURL, whatsappClientURL);
+      } else {
+        window.open(whatsappURL, "_blank");
+        if (whatsappClientURL) window.open(whatsappClientURL, "_blank");
+      }
+      setIsProcessingPayment(false);
+      return;
+    }
 
     // 1. Load Razorpay SDK script dynamically
     const isScriptLoaded = await loadRazorpayScript();
@@ -374,27 +426,40 @@ Platform & Packaging Fee : ₹${platformFee}
             <label>Payment Method</label>
 
             <div className="payment-options-wrapper">
-              <div className="payment-options">
-                <label className="payment-option-label selected">
-                  <div className="payment-option-content">
+              <div className="payment-options" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <label className={`payment-option-label ${formData.payment === "COD" ? "selected" : ""}`} style={{ cursor: "pointer", border: formData.payment === "COD" ? "2px solid #22c55e" : "1px solid #cbd5e1", borderRadius: "10px", padding: "12px", background: formData.payment === "COD" ? "#f0fdf4" : "#fff" }}>
+                  <div className="payment-option-content" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="COD"
+                      checked={formData.payment === "COD"}
+                      onChange={handleChange}
+                    />
+                    <div className="payment-title-group">
+                      <span className="payment-main-title" style={{ fontWeight: "700", color: "#15803d" }}>💵 Cash on Delivery / Demo Test Order</span>
+                      <span className="payment-subtitle" style={{ fontSize: "12px", color: "#4b5563" }}>Place test order instantly without online payment to test Admin Panel, Buzzer & WhatsApp</span>
+                    </div>
+                  </div>
+                  <span className="recommended-tag" style={{ background: "#22c55e", color: "#fff", padding: "3px 8px", borderRadius: "4px", fontSize: "11px", fontWeight: "700" }}>Instant Test</span>
+                </label>
+
+                <label className={`payment-option-label ${formData.payment === "Razorpay Gateway" ? "selected" : ""}`} style={{ cursor: "pointer", border: formData.payment === "Razorpay Gateway" ? "2px solid #e63946" : "1px solid #cbd5e1", borderRadius: "10px", padding: "12px", background: formData.payment === "Razorpay Gateway" ? "#fff5f5" : "#fff" }}>
+                  <div className="payment-option-content" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <input
                       type="radio"
                       name="payment"
                       value="Razorpay Gateway"
-                      checked={true}
-                      readOnly
+                      checked={formData.payment === "Razorpay Gateway"}
+                      onChange={handleChange}
                     />
                     <div className="payment-title-group">
-                      <span className="payment-main-title">💳 Pay via Razorpay Gateway</span>
-                      <span className="payment-subtitle">UPI, GPay, PhonePe, Paytm, BHIM, Cards & Netbanking</span>
+                      <span className="payment-main-title" style={{ fontWeight: "700", color: "#b91c1c" }}>💳 Pay via Razorpay Gateway</span>
+                      <span className="payment-subtitle" style={{ fontSize: "12px", color: "#4b5563" }}>UPI, GPay, PhonePe, Paytm, BHIM, Cards & Netbanking</span>
                     </div>
                   </div>
-                  <span className="recommended-tag">Verified Merchant</span>
+                  <span className="recommended-tag">Online Gateway</span>
                 </label>
-
-                <div className="razorpay-hint-box" style={{ marginTop: "10px" }}>
-                  🔒 <strong>Auto-Set Locked Amount:</strong> ₹{total} will be pre-filled automatically in the payment gateway modal. Order is confirmed only after successful payment.
-                </div>
               </div>
             </div>
           </div>
@@ -442,9 +507,12 @@ Platform & Packaging Fee : ₹${platformFee}
             type="submit"
             className="confirm-btn"
             disabled={isProcessingPayment}
+            style={formData.payment === "COD" ? { background: "linear-gradient(135deg, #22c55e, #16a34a)", border: "none" } : {}}
           >
             {isProcessingPayment
-              ? "⚡ Opening Razorpay Gateway..."
+              ? "⚡ Processing Order..."
+              : formData.payment === "COD"
+              ? `🚀 Place Demo Order (₹${total})`
               : `Pay ₹${total} via Razorpay`}
           </button>
 
