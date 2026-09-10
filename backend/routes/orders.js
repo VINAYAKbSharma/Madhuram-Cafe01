@@ -42,7 +42,7 @@ const saveOrdersToDisk = (orders) => {
 // Fallback in-memory store for orders if MongoDB is offline (initialized from disk)
 const inMemoryOrders = loadOrdersFromDisk();
 
-// Helper to format WhatsApp message & URLs for numbers 9713330116 and 9691634045
+// Helper to format WhatsApp message & URL for client number 9691634045
 const generateWhatsAppUrls = (order) => {
   if (!order) return {};
   const itemsText = order.items && order.items.length > 0
@@ -71,7 +71,6 @@ ${itemsText}
 
   const encodedMsg = encodeURIComponent(message);
   return {
-    senderNumberUrl: `https://wa.me/919713330116?text=${encodedMsg}`,
     clientNumberUrl: `https://wa.me/919691634045?text=${encodedMsg}`,
     customerUrl: (order.customer?.mobile || order.userMobile)
       ? `https://wa.me/91${(order.customer?.mobile || order.userMobile).replace(/\D/g, "")}?text=${encodedMsg}`

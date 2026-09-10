@@ -137,29 +137,16 @@ function Orders({ orders = [], onBackHome, onBrowseMenu, user }) {
                     <span>Total Amount</span>
                     <strong>₹{order.total}</strong>
                   </div>
-                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                    <a
-                      href={`https://wa.me/919713330116?text=${encodeURIComponent(
-                        `Hi Madhuram Cafe, checking status for Order #${order.id}`
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="whatsapp-support-btn"
-                    >
-                      <FaWhatsapp /> Track (9713330116)
-                    </a>
-                    <a
-                      href={`https://wa.me/919691634045?text=${encodeURIComponent(
-                        `Hi Madhuram Cafe, checking status for Order #${order.id}`
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="whatsapp-support-btn"
-                      style={{ background: "#128C7E" }}
-                    >
-                      <FaWhatsapp /> Track (9691634045)
-                    </a>
-                  </div>
+                  <a
+                    href={`https://wa.me/919691634045?text=${encodeURIComponent(
+                      `Hi Madhuram Cafe, checking status for Order #${order.id}`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="whatsapp-support-btn"
+                  >
+                    <FaWhatsapp /> Track on WhatsApp
+                  </a>
                 </div>
               </div>
             ))}

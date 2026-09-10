@@ -54,7 +54,7 @@ const filterDeletedOrders = (orders) => {
 };
 
 const getWhatsAppLinks = (order) => {
-  if (!order) return { senderUrl: "#", clientUrl: "#", customerUrl: null, message: "" };
+  if (!order) return { clientUrl: "#", customerUrl: null, message: "" };
 
   const itemsFormatted = Array.isArray(order.items)
     ? order.items.map((it) => `• ${it.name} x ${it.qty} (₹${it.price * it.qty})`).join("\n")
@@ -85,7 +85,6 @@ ${itemsFormatted}
   const custMobile = (order.customer?.mobile || order.userMobile || "").replace(/\D/g, "");
 
   return {
-    senderUrl: `https://wa.me/919713330116?text=${encoded}`,
     clientUrl: `https://wa.me/919691634045?text=${encoded}`,
     customerUrl: custMobile ? `https://wa.me/91${custMobile}?text=${encoded}` : null,
     message,
@@ -848,7 +847,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
                 <FaCheckCircle /> Confirm Order (Stop Buzzer)
               </button>
               <a
-                href={getWhatsAppLinks(newOrderAlert).senderUrl}
+                href={getWhatsAppLinks(newOrderAlert).clientUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -864,26 +863,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
                   gap: "5px",
                 }}
               >
-                <FaWhatsapp /> Send to 9713330116
-              </a>
-              <a
-                href={getWhatsAppLinks(newOrderAlert).clientUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  background: "#128C7E",
-                  color: "#fff",
-                  padding: "6px 12px",
-                  borderRadius: "6px",
-                  textDecoration: "none",
-                  fontWeight: "700",
-                  fontSize: "12px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "5px",
-                }}
-              >
-                <FaWhatsapp /> Send to 9691634045
+                <FaWhatsapp /> Send WhatsApp Alert
               </a>
               <button
                 type="button"
@@ -1132,7 +1112,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
                           <FaWhatsapp /> Send WhatsApp Order Alert:
                         </span>
                         <a
-                          href={getWhatsAppLinks(order).senderUrl}
+                          href={getWhatsAppLinks(order).clientUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{
@@ -1148,30 +1128,9 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
                             alignItems: "center",
                             gap: "5px",
                           }}
-                          title="Send order details to 9713330116"
-                        >
-                          <FaWhatsapp /> Send to 9713330116
-                        </a>
-                        <a
-                          href={getWhatsAppLinks(order).clientUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            background: "rgba(18, 140, 126, 0.15)",
-                            color: "#34d399",
-                            border: "1px solid #34d399",
-                            padding: "5px 10px",
-                            borderRadius: "6px",
-                            fontSize: "12px",
-                            fontWeight: "700",
-                            textDecoration: "none",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "5px",
-                          }}
                           title="Send order details to 9691634045"
                         >
-                          <FaWhatsapp /> Send to Client (9691634045)
+                          <FaWhatsapp /> Send WhatsApp Alert
                         </a>
                         {getWhatsAppLinks(order).customerUrl && (
                           <a
