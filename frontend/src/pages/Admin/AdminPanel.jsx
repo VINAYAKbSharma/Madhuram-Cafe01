@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   FaLock,
   FaUserShield,
@@ -21,6 +21,7 @@ import {
 } from "react-icons/fa";
 import { ADMIN_CREDENTIALS } from "../../config/adminConfig";
 import { API_BASE_URL } from "../../config/api";
+import buzzerAudio from "../../assets/buzzer.mp3";
 import "./AdminPanel.css";
 
 const filterDeletedOrders = (orders) => {
@@ -91,44 +92,6 @@ ${itemsFormatted}
   };
 };
 
-const playOrderBuzzerSound = () => {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-
-    const ctx = new AudioContext();
-    if (ctx.state === "suspended") {
-      ctx.resume();
-    }
-
-    const now = ctx.currentTime;
-    const playBeep = (startTime, freq, duration) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(freq, startTime);
-
-      gain.gain.setValueAtTime(0.4, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(startTime);
-      osc.stop(startTime + duration);
-    };
-
-    // Loud 4-pulse cafe order alert buzzer: Beep Beep Beep BEEP!
-    playBeep(now, 880, 0.25);
-    playBeep(now + 0.35, 880, 0.25);
-    playBeep(now + 0.7, 880, 0.25);
-    playBeep(now + 1.05, 1200, 0.5);
-  } catch (err) {
-    console.warn("Buzzer sound playback error:", err);
-  }
-};
-
 function AdminPanel({ onBackHome, onOrdersUpdated }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return sessionStorage.getItem("madhuram_admin_session") === "true";
@@ -147,12 +110,62 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
   const [newOrderAlert, setNewOrderAlert] = useState(null);
   const [isSoundMuted, setIsSoundMuted] = useState(() => localStorage.getItem("madhuram_admin_muted") === "true");
 
+  const audioRef = useRef(null);
+
+  // Initialize continuous buzzer audio object
+  useEffect(() => {
+    try {
+      const audio = new Audio(buzzerAudio);
+      audio.loop = true; // Continuous playing until admin confirms order
+      audioRef.current = audio;
+    } catch (e) {
+      console.warn("Failed to initialize audio:", e);
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    };
+  }, []);
+
+  const playOrderBuzzerSound = () => {
+    try {
+      if (!audioRef.current) {
+        audioRef.current = new Audio(buzzerAudio);
+        audioRef.current.loop = true;
+      }
+      audioRef.current.loop = true;
+      audioRef.current.currentTime = 0;
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn("Autoplay blocked by browser. User interaction needed:", err);
+        });
+      }
+    } catch (err) {
+      console.warn("Buzzer audio play error:", err);
+    }
+  };
+
+  const stopBuzzerSound = () => {
+    try {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    } catch (err) {}
+  };
+
   const toggleSound = () => {
     setIsSoundMuted((prev) => {
       const next = !prev;
       localStorage.setItem("madhuram_admin_muted", String(next));
-      if (!next) {
+      if (!next && newOrderAlert) {
         playOrderBuzzerSound();
+      } else {
+        stopBuzzerSound();
       }
       return next;
     });
@@ -403,15 +416,12 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
     };
   }, [isAuthenticated, newOrderAlert, isSoundMuted]);
 
-  // Trigger order buzzer sound whenever a new order alert arrives
+  // Continuous audio buzzer loop until admin confirms the order
   useEffect(() => {
     if (newOrderAlert && !isSoundMuted) {
       playOrderBuzzerSound();
-      // Repeat buzzer sound after 3 seconds if banner is still active
-      const buzzerTimer = setTimeout(() => {
-        if (!isSoundMuted) playOrderBuzzerSound();
-      }, 3500);
-      return () => clearTimeout(buzzerTimer);
+    } else {
+      stopBuzzerSound();
     }
   }, [newOrderAlert, isSoundMuted]);
 
@@ -435,6 +445,59 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
   const handleLogout = () => {
     setIsAuthenticated(false);
     sessionStorage.removeItem("madhuram_admin_session");
+  };
+
+  // Confirm/Accept Order (Stops continuous buzzer audio & updates status to Confirmed)
+  const handleAcceptOrder = async (orderId) => {
+    try {
+      stopBuzzerSound();
+
+      // 1. Update central backend API
+      fetch(`${API_BASE_URL}/api/orders/${orderId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "Confirmed",
+          deliveryMessage: "Order Confirmed by Admin! Food is being prepared.",
+        }),
+      }).catch((err) => console.warn("Backend status sync warning:", err));
+
+      // 2. Update local storage & state
+      const rawOrders = localStorage.getItem("madhuram_orders");
+      const allOrders = rawOrders ? JSON.parse(rawOrders) : [];
+      const targetOrder = allOrders.find((o) => String(o.id) === String(orderId) || String(o.orderId) === String(orderId));
+
+      const updatedAllOrders = allOrders.map((o) =>
+        String(o.id) === String(orderId) || String(o.orderId) === String(orderId)
+          ? { ...o, status: "Confirmed", deliveryMessage: "Order Confirmed by Admin! Food is being prepared." }
+          : o
+      );
+      localStorage.setItem("madhuram_orders", JSON.stringify(updatedAllOrders));
+      setOrdersList(updatedAllOrders);
+
+      // Update user specific orders list if mobile is available
+      const mobile = targetOrder?.userMobile || targetOrder?.customer?.mobile;
+      if (mobile) {
+        const rawUserOrders = localStorage.getItem(`madhuram_orders_${mobile}`);
+        if (rawUserOrders) {
+          const userOrders = JSON.parse(rawUserOrders);
+          const updatedUserOrders = userOrders.map((o) =>
+            String(o.id) === String(orderId) || String(o.orderId) === String(orderId)
+              ? { ...o, status: "Confirmed", deliveryMessage: "Order Confirmed by Admin! Food is being prepared." }
+              : o
+          );
+          localStorage.setItem(`madhuram_orders_${mobile}`, JSON.stringify(updatedUserOrders));
+        }
+      }
+
+      if (newOrderAlert && (String(newOrderAlert.id) === String(orderId) || String(newOrderAlert.orderId) === String(orderId))) {
+        setNewOrderAlert(null);
+      }
+
+      onOrdersUpdated && onOrdersUpdated();
+    } catch (err) {
+      console.error("Error confirming order:", err);
+    }
   };
 
 
@@ -763,6 +826,27 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
               </div>
             </div>
             <div className="alert-actions" style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="confirm-order-alert-btn"
+                onClick={() => handleAcceptOrder(newOrderAlert.id)}
+                style={{
+                  background: "#22c55e",
+                  color: "#fff",
+                  border: "none",
+                  padding: "6px 14px",
+                  borderRadius: "6px",
+                  fontWeight: "800",
+                  fontSize: "12px",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  boxShadow: "0 0 10px rgba(34, 197, 94, 0.4)",
+                }}
+              >
+                <FaCheckCircle /> Confirm Order (Stop Buzzer)
+              </button>
               <a
                 href={getWhatsAppLinks(newOrderAlert).senderUrl}
                 target="_blank"
@@ -804,9 +888,12 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
               <button
                 type="button"
                 className="dismiss-alert-btn"
-                onClick={() => setNewOrderAlert(null)}
+                onClick={() => {
+                  setNewOrderAlert(null);
+                  stopBuzzerSound();
+                }}
               >
-                Dismiss
+                Dismiss / Stop Sound
               </button>
             </div>
 
@@ -1119,9 +1206,18 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
                         </div>
 
                         <div className="admin-actions-group">
+                          {isPending && (
+                            <button
+                              type="button"
+                              className="confirm-delivery-btn"
+                              onClick={() => handleAcceptOrder(order.id)}
+                              style={{ background: "#22c55e", color: "#fff" }}
+                            >
+                              <FaCheckCircle /> Confirm Order
+                            </button>
+                          )}
 
-
-                          {!isDelivered && (
+                          {isConfirmed && (
                             <button
                               type="button"
                               className="confirm-delivery-btn"
