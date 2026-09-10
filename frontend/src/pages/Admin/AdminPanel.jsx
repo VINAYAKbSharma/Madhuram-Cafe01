@@ -15,6 +15,9 @@ import {
   FaPlus,
   FaGift,
   FaWhatsapp,
+  FaVolumeUp,
+  FaVolumeMute,
+  FaBell,
 } from "react-icons/fa";
 import { ADMIN_CREDENTIALS } from "../../config/adminConfig";
 import { API_BASE_URL } from "../../config/api";
@@ -88,6 +91,44 @@ ${itemsFormatted}
   };
 };
 
+const playOrderBuzzerSound = () => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+
+    const ctx = new AudioContext();
+    if (ctx.state === "suspended") {
+      ctx.resume();
+    }
+
+    const now = ctx.currentTime;
+    const playBeep = (startTime, freq, duration) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0.4, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    };
+
+    // Loud 4-pulse cafe order alert buzzer: Beep Beep Beep BEEP!
+    playBeep(now, 880, 0.25);
+    playBeep(now + 0.35, 880, 0.25);
+    playBeep(now + 0.7, 880, 0.25);
+    playBeep(now + 1.05, 1200, 0.5);
+  } catch (err) {
+    console.warn("Buzzer sound playback error:", err);
+  }
+};
+
 function AdminPanel({ onBackHome, onOrdersUpdated }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return sessionStorage.getItem("madhuram_admin_session") === "true";
@@ -104,6 +145,18 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
   const [clientsList, setClientsList] = useState([]);
   const [couponsList, setCouponsList] = useState([]);
   const [newOrderAlert, setNewOrderAlert] = useState(null);
+  const [isSoundMuted, setIsSoundMuted] = useState(() => localStorage.getItem("madhuram_admin_muted") === "true");
+
+  const toggleSound = () => {
+    setIsSoundMuted((prev) => {
+      const next = !prev;
+      localStorage.setItem("madhuram_admin_muted", String(next));
+      if (!next) {
+        playOrderBuzzerSound();
+      }
+      return next;
+    });
+  };
 
   const [newCouponForm, setNewCouponForm] = useState({
     code: "",
@@ -315,6 +368,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
             const latestPending = currentOrders.find((o) => o.status === "Pending");
             if (latestPending && String(latestPending.id) !== String(newOrderAlert?.id)) {
               setNewOrderAlert(latestPending);
+              if (!isSoundMuted) playOrderBuzzerSound();
             }
           }
           return currentOrders;
@@ -333,6 +387,7 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
     const handleNewOrderEvent = (e) => {
       if (e.detail) {
         setNewOrderAlert(e.detail);
+        if (!isSoundMuted) playOrderBuzzerSound();
         loadData();
       }
     };
@@ -346,7 +401,19 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
       window.removeEventListener("madhuram_new_order", handleNewOrderEvent);
       clearInterval(interval);
     };
-  }, [isAuthenticated, newOrderAlert]);
+  }, [isAuthenticated, newOrderAlert, isSoundMuted]);
+
+  // Trigger order buzzer sound whenever a new order alert arrives
+  useEffect(() => {
+    if (newOrderAlert && !isSoundMuted) {
+      playOrderBuzzerSound();
+      // Repeat buzzer sound after 3 seconds if banner is still active
+      const buzzerTimer = setTimeout(() => {
+        if (!isSoundMuted) playOrderBuzzerSound();
+      }, 3500);
+      return () => clearTimeout(buzzerTimer);
+    }
+  }, [newOrderAlert, isSoundMuted]);
 
   // Handle Admin Login
   const handleLoginSubmit = (e) => {
@@ -639,6 +706,33 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
           <button
             type="button"
             className="admin-nav-action-btn"
+            onClick={playOrderBuzzerSound}
+            title="Click to test order alert buzzer sound"
+            style={{ background: "rgba(245, 158, 11, 0.2)", color: "#f59e0b", border: "1px solid #f59e0b", display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            <FaBell /> Test Buzzer 🔊
+          </button>
+
+          <button
+            type="button"
+            className="admin-nav-action-btn"
+            onClick={toggleSound}
+            title={isSoundMuted ? "Click to turn ON order buzzer sound" : "Click to Mute order buzzer sound"}
+            style={{
+              background: isSoundMuted ? "rgba(239, 68, 68, 0.2)" : "rgba(34, 197, 94, 0.2)",
+              color: isSoundMuted ? "#f87171" : "#4ade80",
+              border: isSoundMuted ? "1px solid #f87171" : "1px solid #4ade80",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            {isSoundMuted ? <><FaVolumeMute /> Buzzer OFF</> : <><FaVolumeUp /> Buzzer ON</>}
+          </button>
+
+          <button
+            type="button"
+            className="admin-nav-action-btn"
             onClick={onBackHome}
           >
             <FaArrowLeft /> Back to Website
@@ -658,9 +752,9 @@ function AdminPanel({ onBackHome, onOrdersUpdated }) {
         {newOrderAlert && (
           <div className="new-order-alert-banner">
             <div className="alert-text">
-              <span className="alert-pulse">🔔</span>
+              <span className="alert-pulse">🔔 🔊</span>
               <div>
-                <strong>New Order Received! Order #{newOrderAlert.id}</strong>
+                <strong style={{ fontSize: "16px", color: "#f59e0b" }}>🔔 BUZZER ALERT: New Order Received! Order #{newOrderAlert.id}</strong>
                 <p>
                   Customer: {newOrderAlert.customer?.fullName || "Valued Customer"} (
                   {newOrderAlert.customer?.mobile || "No Mobile"}) — Total: ₹
