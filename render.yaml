@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: Madhuram-Cafe01-2
+    env: node
+    plan: free
+    buildCommand: npm install && npm --prefix backend install && npm --prefix frontend install --include=dev && npm --prefix frontend run build
+    startCommand: node backend/server.js
+    envVars:
+      - key: NODE_VERSION
+        value: 20.11.0
