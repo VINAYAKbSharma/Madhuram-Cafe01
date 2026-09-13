@@ -20,9 +20,8 @@ function CartDrawer({
   const subtotal = cartItems.reduce((total, item) => total + item.price * item.qty, 0);
   const discount = couponApplied ? (appliedDiscount || 0) : 0;
   const discountedSubtotal = Math.max(0, subtotal - discount);
-  const delivery = subtotal === 0 ? 0 : 20;
-  const platformFee = subtotal > 0 ? 20 : 0;
-  const total = discountedSubtotal + delivery + platformFee;
+  const delivery = subtotal === 0 ? 0 : 30;
+  const total = discountedSubtotal + delivery;
   const isMinOrderMet = subtotal >= MIN_ORDER_AMOUNT || subtotal === 0;
   const minOrderDifference = MIN_ORDER_AMOUNT - subtotal;
 
@@ -121,10 +120,6 @@ function CartDrawer({
           <div>
             <span>Delivery Fee</span>
             <b>₹{delivery}</b>
-          </div>
-          <div>
-            <span>Platform & Packaging Fee</span>
-            <b>₹{platformFee}</b>
           </div>
           <hr />
           <div className="cart-drawer__grand">

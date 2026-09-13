@@ -29,9 +29,8 @@ function Checkout({ onBack, cartItems, onPlaceOrder, currentUser }) {
     0
   );
 
-  const deliveryCharge = subtotal === 0 ? 0 : 20;
-  const platformFee = subtotal > 0 ? 20 : 0;
-  const total = subtotal + deliveryCharge + platformFee;
+  const deliveryCharge = subtotal === 0 ? 0 : 30;
+  const total = subtotal + deliveryCharge;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -105,17 +104,67 @@ ${orderItems}
 
 Subtotal : ₹${subtotal}
 Delivery : ₹${deliveryCharge}
-Platform & Packaging Fee : ₹${platformFee}
 
 💰 *Grand Total : ₹${total}*
 
-💳 Payment Method : Razorpay Gateway
+💳 Payment Method : ${formData.payment}
 `;
 
     const cafeNumber = "919691634045";
     const whatsappURL = `https://wa.me/${cafeNumber}?text=${encodeURIComponent(
       message
     )}`;
+
+    // Handle Cash on Delivery (Test / Regular COD)
+    if (formData.payment === "Cash on Delivery") {
+      const confirmedOrder = {
+        id: targetId,
+        orderId: targetId,
+        date: new Date().toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        items: cartItems.map((item) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          qty: item.qty,
+          image: item.image,
+        })),
+        subtotal,
+        deliveryCharge,
+        platformFee: 0,
+        total,
+        address: formattedAddressText,
+        customer: {
+          fullName: formData.fullName,
+          mobile: formData.mobile,
+        },
+        userMobile: formData.mobile,
+        status: "Pending",
+        deliveryMessage: "Pending Admin Confirmation",
+        payment: "Cash on Delivery",
+        transactionId: `COD_${targetId}`,
+        paymentStatus: "Pending COD",
+      };
+
+      try {
+        window.dispatchEvent(
+          new CustomEvent("madhuram_new_order", { detail: confirmedOrder })
+        );
+      } catch (e) {}
+
+      if (onPlaceOrder) {
+        await onPlaceOrder(confirmedOrder, whatsappURL);
+      } else {
+        window.open(whatsappURL, "_blank");
+      }
+      setIsProcessingPayment(false);
+      return;
+    }
 
     // 1. Load Razorpay SDK script dynamically
     const isScriptLoaded = await loadRazorpayScript();
@@ -197,7 +246,7 @@ Platform & Packaging Fee : ₹${platformFee}
             })),
             subtotal,
             deliveryCharge,
-            platformFee,
+            platformFee: 0,
             total,
             address: formattedAddressText,
             customer: {
@@ -370,22 +419,57 @@ Platform & Packaging Fee : ₹${platformFee}
             <label>Payment Method</label>
 
             <div className="payment-options-wrapper">
-              <div className="payment-options">
-                <label className="payment-option-label selected" style={{ border: "2px solid #e63946", borderRadius: "10px", padding: "12px", background: "#fff5f5" }}>
+              <div className="payment-options" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <label
+                  className={`payment-option-label ${formData.payment === "Razorpay Gateway" ? "selected" : ""}`}
+                  style={{
+                    border: formData.payment === "Razorpay Gateway" ? "2px solid #e63946" : "1px solid #cbd5e1",
+                    borderRadius: "10px",
+                    padding: "12px",
+                    background: formData.payment === "Razorpay Gateway" ? "#fff5f5" : "#fff",
+                    cursor: "pointer",
+                  }}
+                >
                   <div className="payment-option-content" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <input
                       type="radio"
                       name="payment"
                       value="Razorpay Gateway"
-                      checked={true}
-                      readOnly
+                      checked={formData.payment === "Razorpay Gateway"}
+                      onChange={handleChange}
                     />
                     <div className="payment-title-group">
                       <span className="payment-main-title" style={{ fontWeight: "700", color: "#b91c1c" }}>💳 Pay via Razorpay Gateway</span>
                       <span className="payment-subtitle" style={{ fontSize: "12px", color: "#4b5563" }}>UPI, GPay, PhonePe, Paytm, Cards & Netbanking</span>
                     </div>
                   </div>
-                  <span className="recommended-tag">Verified Merchant</span>
+                  <span className="recommended-tag">Online Payment</span>
+                </label>
+
+                <label
+                  className={`payment-option-label ${formData.payment === "Cash on Delivery" ? "selected" : ""}`}
+                  style={{
+                    border: formData.payment === "Cash on Delivery" ? "2px solid #22c55e" : "1px solid #cbd5e1",
+                    borderRadius: "10px",
+                    padding: "12px",
+                    background: formData.payment === "Cash on Delivery" ? "#f0fdf4" : "#fff",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div className="payment-option-content" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="Cash on Delivery"
+                      checked={formData.payment === "Cash on Delivery"}
+                      onChange={handleChange}
+                    />
+                    <div className="payment-title-group">
+                      <span className="payment-main-title" style={{ fontWeight: "700", color: "#15803d" }}>💵 Cash on Delivery (TESTING MODE)</span>
+                      <span className="payment-subtitle" style={{ fontSize: "12px", color: "#4b5563" }}>Pay with Cash upon delivery • Recommended for website testing</span>
+                    </div>
+                  </div>
+                  <span className="recommended-tag" style={{ background: "#22c55e", color: "#fff" }}>Test COD</span>
                 </label>
               </div>
             </div>
@@ -414,11 +498,6 @@ Platform & Packaging Fee : ₹${platformFee}
               <div className="summary-item">
                 <span>Delivery Fee</span>
                 <strong>₹{deliveryCharge}</strong>
-              </div>
-
-              <div className="summary-item">
-                <span>Platform & Packaging Fee</span>
-                <strong>₹{platformFee}</strong>
               </div>
 
               <hr />

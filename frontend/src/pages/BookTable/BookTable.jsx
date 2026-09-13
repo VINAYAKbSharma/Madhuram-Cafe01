@@ -25,8 +25,7 @@ function BookTable({ onBack, cartItems = [] }) {
       .join("\n");
 
     const subtotal = cartItems.reduce((total, item) => total + item.price * item.qty, 0);
-    const platformFee = cartItems.length > 0 ? 20 : 0;
-    const total = subtotal + platformFee;
+    const total = subtotal;
 
     const menuSection = cartItems.length > 0
       ? `
@@ -37,7 +36,6 @@ ${menuItems}
 --------------------------------
 
 Subtotal : ₹${subtotal}
-Platform & Packaging Fee : ₹${platformFee}
 
 💰 *Estimated Total : ₹${total}*
 `
@@ -67,8 +65,7 @@ ${menuSection}
   };
 
   const subtotal = cartItems.reduce((total, item) => total + item.price * item.qty, 0);
-  const platformFee = cartItems.length > 0 ? 20 : 0;
-  const total = subtotal + platformFee;
+  const total = subtotal;
 
   return (
     <div className="booktable-page">
@@ -188,10 +185,6 @@ ${menuSection}
               <div className="menu-preview-item">
                 <span>Subtotal</span>
                 <span>₹{subtotal}</span>
-              </div>
-              <div className="menu-preview-item">
-                <span>Platform & Packaging Fee</span>
-                <span>₹{platformFee}</span>
               </div>
               <hr />
               <div className="menu-preview-item menu-preview-total">
