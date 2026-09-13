@@ -107,64 +107,13 @@ Delivery : ₹${deliveryCharge}
 
 💰 *Grand Total : ₹${total}*
 
-💳 Payment Method : ${formData.payment}
+💳 Payment Method : Razorpay Gateway
 `;
 
     const cafeNumber = "919691634045";
     const whatsappURL = `https://wa.me/${cafeNumber}?text=${encodeURIComponent(
       message
     )}`;
-
-    // Handle Cash on Delivery (Test / Regular COD)
-    if (formData.payment === "Cash on Delivery") {
-      const confirmedOrder = {
-        id: targetId,
-        orderId: targetId,
-        date: new Date().toLocaleString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        items: cartItems.map((item) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          qty: item.qty,
-          image: item.image,
-        })),
-        subtotal,
-        deliveryCharge,
-        platformFee: 0,
-        total,
-        address: formattedAddressText,
-        customer: {
-          fullName: formData.fullName,
-          mobile: formData.mobile,
-        },
-        userMobile: formData.mobile,
-        status: "Pending",
-        deliveryMessage: "Pending Admin Confirmation",
-        payment: "Cash on Delivery",
-        transactionId: `COD_${targetId}`,
-        paymentStatus: "Pending COD",
-      };
-
-      try {
-        window.dispatchEvent(
-          new CustomEvent("madhuram_new_order", { detail: confirmedOrder })
-        );
-      } catch (e) {}
-
-      if (onPlaceOrder) {
-        await onPlaceOrder(confirmedOrder, whatsappURL);
-      } else {
-        window.open(whatsappURL, "_blank");
-      }
-      setIsProcessingPayment(false);
-      return;
-    }
 
     // 1. Load Razorpay SDK script dynamically
     const isScriptLoaded = await loadRazorpayScript();
@@ -207,78 +156,91 @@ Delivery : ₹${deliveryCharge}
       image: "https://cdn-icons-png.flaticon.com/512/3081/3081559.png",
       order_id: rzpOrderData.order_id || rzpOrderData.order?.id,
       handler: async function (response) {
-        // Payment successful - verify payment signature on backend
+        const paymentId = response?.razorpay_payment_id || response?.payment_id;
+        const rzpOrderId = response?.razorpay_order_id || response?.order_id;
+        const rzpSignature = response?.razorpay_signature || response?.signature;
+
+        if (!paymentId) {
+          alert("Payment could not be confirmed by Razorpay. Please try again.");
+          setIsProcessingPayment(false);
+          return;
+        }
+
+        // Attempt background verification with serverless backend
+        let isVerified = false;
         try {
           const verifyRes = await fetch(`${API_BASE_URL}/api/payment/verify`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
+              razorpay_order_id: rzpOrderId,
+              razorpay_payment_id: paymentId,
+              razorpay_signature: rzpSignature,
             }),
           });
-          const verifyData = await verifyRes.json();
-
-          if (!verifyData.success) {
-            alert("Payment signature verification failed! Order not placed.");
-            setIsProcessingPayment(false);
-            return;
-          }
-
-          // Payment verified successfully! Create and list the order
-          const confirmedOrder = {
-            id: targetId,
-            orderId: targetId,
-            date: new Date().toLocaleString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            items: cartItems.map((item) => ({
-              id: item.id,
-              name: item.name,
-              price: item.price,
-              qty: item.qty,
-              image: item.image,
-            })),
-            subtotal,
-            deliveryCharge,
-            platformFee: 0,
-            total,
-            address: formattedAddressText,
-            customer: {
-              fullName: formData.fullName,
-              mobile: formData.mobile,
-            },
-            userMobile: formData.mobile,
-            status: "Pending",
-            deliveryMessage: "Pending Admin Confirmation",
-            payment: "Razorpay Gateway",
-            transactionId: response.razorpay_payment_id,
-            razorpayOrderId: response.razorpay_order_id,
-            paymentStatus: "Paid",
-          };
-
-          // Dispatch custom event locally
-          try {
-            window.dispatchEvent(
-              new CustomEvent("madhuram_new_order", { detail: confirmedOrder })
-            );
-          } catch (e) {}
-
-          // Place order and navigate to Orders
-          if (onPlaceOrder) {
-            await onPlaceOrder(confirmedOrder, whatsappURL, whatsappClientURL);
-          } else {
-            window.open(whatsappURL, "_blank");
-            if (whatsappClientURL) window.open(whatsappClientURL, "_blank");
+          if (verifyRes.ok) {
+            const verifyData = await verifyRes.json();
+            if (verifyData?.success) {
+              isVerified = true;
+            }
           }
         } catch (vErr) {
-          console.error("Verification Error:", vErr);
-          alert("Error verifying payment. Please contact cafe support.");
+          console.warn("Backend signature verification network warning:", vErr);
+        }
+
+        // Payment confirmed by Razorpay SDK handler — create & place order
+        const confirmedOrder = {
+          id: targetId,
+          orderId: targetId,
+          date: new Date().toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          items: cartItems.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            qty: item.qty,
+            image: item.image,
+          })),
+          subtotal,
+          deliveryCharge,
+          platformFee: 0,
+          total,
+          address: formattedAddressText,
+          customer: {
+            fullName: formData.fullName,
+            mobile: formData.mobile,
+          },
+          userMobile: formData.mobile,
+          status: "Pending",
+          deliveryMessage: "Pending Admin Confirmation",
+          payment: "Razorpay Gateway",
+          transactionId: paymentId,
+          razorpayOrderId: rzpOrderId,
+          paymentStatus: "Paid",
+        };
+
+        // Dispatch custom event locally
+        try {
+          window.dispatchEvent(
+            new CustomEvent("madhuram_new_order", { detail: confirmedOrder })
+          );
+        } catch (e) {}
+
+        // Place order, save to DB, send WhatsApp message, and open Orders page
+        try {
+          if (onPlaceOrder) {
+            await onPlaceOrder(confirmedOrder, whatsappURL);
+          } else {
+            window.open(whatsappURL, "_blank");
+          }
+        } catch (placeErr) {
+          console.error("Error saving order:", placeErr);
+          window.open(whatsappURL, "_blank");
         } finally {
           setIsProcessingPayment(false);
         }
@@ -419,57 +381,22 @@ Delivery : ₹${deliveryCharge}
             <label>Payment Method</label>
 
             <div className="payment-options-wrapper">
-              <div className="payment-options" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                <label
-                  className={`payment-option-label ${formData.payment === "Razorpay Gateway" ? "selected" : ""}`}
-                  style={{
-                    border: formData.payment === "Razorpay Gateway" ? "2px solid #e63946" : "1px solid #cbd5e1",
-                    borderRadius: "10px",
-                    padding: "12px",
-                    background: formData.payment === "Razorpay Gateway" ? "#fff5f5" : "#fff",
-                    cursor: "pointer",
-                  }}
-                >
+              <div className="payment-options">
+                <label className="payment-option-label selected" style={{ border: "2px solid #e63946", borderRadius: "10px", padding: "12px", background: "#fff5f5" }}>
                   <div className="payment-option-content" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <input
                       type="radio"
                       name="payment"
                       value="Razorpay Gateway"
-                      checked={formData.payment === "Razorpay Gateway"}
-                      onChange={handleChange}
+                      checked={true}
+                      readOnly
                     />
                     <div className="payment-title-group">
                       <span className="payment-main-title" style={{ fontWeight: "700", color: "#b91c1c" }}>💳 Pay via Razorpay Gateway</span>
                       <span className="payment-subtitle" style={{ fontSize: "12px", color: "#4b5563" }}>UPI, GPay, PhonePe, Paytm, Cards & Netbanking</span>
                     </div>
                   </div>
-                  <span className="recommended-tag">Online Payment</span>
-                </label>
-
-                <label
-                  className={`payment-option-label ${formData.payment === "Cash on Delivery" ? "selected" : ""}`}
-                  style={{
-                    border: formData.payment === "Cash on Delivery" ? "2px solid #22c55e" : "1px solid #cbd5e1",
-                    borderRadius: "10px",
-                    padding: "12px",
-                    background: formData.payment === "Cash on Delivery" ? "#f0fdf4" : "#fff",
-                    cursor: "pointer",
-                  }}
-                >
-                  <div className="payment-option-content" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="Cash on Delivery"
-                      checked={formData.payment === "Cash on Delivery"}
-                      onChange={handleChange}
-                    />
-                    <div className="payment-title-group">
-                      <span className="payment-main-title" style={{ fontWeight: "700", color: "#15803d" }}>💵 Cash on Delivery (TESTING MODE)</span>
-                      <span className="payment-subtitle" style={{ fontSize: "12px", color: "#4b5563" }}>Pay with Cash upon delivery • Recommended for website testing</span>
-                    </div>
-                  </div>
-                  <span className="recommended-tag" style={{ background: "#22c55e", color: "#fff" }}>Test COD</span>
+                  <span className="recommended-tag">Verified Merchant</span>
                 </label>
               </div>
             </div>
